@@ -1,11 +1,29 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { FlatList, Text, View } from 'react-native';
+import { ScreenShell } from '../components/ScreenShell';
+import { getAllMeetings, MeetingRecord } from '../db/database';
 
 export function HistoryScreen() {
+  const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
+
+  useEffect(() => {
+    getAllMeetings().then(setMeetings);
+  }, []);
+
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <Text style={{ fontSize: 28, fontWeight: '700', marginBottom: 12 }}>History</Text>
-      <Text>Meeting history list goes here.</Text>
-    </View>
+    <ScreenShell>
+      <Text style={{ color: 'white', fontSize: 28, fontWeight: '800', marginBottom: 16 }}>History</Text>
+      <FlatList
+        data={meetings}
+        keyExtractor={(item) => String(item.id)}
+        ListEmptyComponent={<Text style={{ color: '#94a3b8' }}>No meetings recorded yet.</Text>}
+        renderItem={({ item }) => (
+          <View style={{ backgroundColor: '#111827', borderRadius: 14, padding: 16, marginBottom: 12 }}>
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: '700' }}>{item.title}</Text>
+            <Text style={{ color: '#94a3b8' }}>{item.date}</Text>
+          </View>
+        )}
+      />
+    </ScreenShell>
   );
 }

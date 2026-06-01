@@ -16,7 +16,9 @@ type State = {
   processingStep: string;
   chunkCount: number;
   currentChunkIndex: number;
+  isAuthenticated: boolean;
   setAppState: (appState: AppState) => void;
+  setAuthenticated: (isAuthenticated: boolean) => void;
   setMeeting: (meeting: { id: number | null; title: string; date: string }) => void;
   addAudioChunk: (uri: string) => void;
   setTranscript: (rawTranscript: string) => void;
@@ -40,11 +42,13 @@ const initial = {
   processingStep: '',
   chunkCount: 0,
   currentChunkIndex: 0,
+  isAuthenticated: false,
 };
 
 export const useAppStore = create<State>((set) => ({
   ...initial,
   setAppState: (appState) => set({ appState }),
+  setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
   setMeeting: ({ id, title, date }) => set({ currentMeetingId: id, meetingTitle: title, meetingDate: date }),
   addAudioChunk: (uri) => set((state) => ({ audioChunks: [...state.audioChunks, uri], chunkCount: state.audioChunks.length + 1 })),
   setTranscript: (rawTranscript) => set({ rawTranscript }),
