@@ -1,0 +1,7 @@
+node_modules
+.env
+android/app/release.keystore
+android/.gradle
+.gradle
+*.keystore
+*.jks
