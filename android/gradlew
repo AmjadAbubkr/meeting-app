@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Placeholder wrapper for local scaffolding.
+echo "Gradle wrapper not generated yet. Run React Native Android setup to create the full wrapper."
+exit 1
