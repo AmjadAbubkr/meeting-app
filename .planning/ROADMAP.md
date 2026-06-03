@@ -11,8 +11,8 @@ Transform the Meeting App from a scaffolded skeleton into a fully functional mee
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Audio Recording** - Real audio recording and upload with chunking ✅
-- [ ] **Phase 2: Transcription** - Groq Whisper API integration for audio-to-text
-- [ ] **Phase 3: Report Generation** - Gemini API integration for bilingual reports with JSON schema
+- [x] **Phase 2: Transcription** - Groq Whisper API integration for audio-to-text ✅
+- [x] **Phase 3: Report Generation** - Gemini API integration for bilingual reports with JSON schema ✅
 - [ ] **Phase 4: Data Persistence & Settings** - SQLite storage, Settings screen, API key management, mandatory setup gate
 - [ ] **Phase 5: History & Meeting Detail** - Full history with grouped list, search, meeting detail with tabs (Report/Transcript/Audio), audio playback, language switcher
 - [ ] **Phase 6: Export & Sharing** - PDF/DOCX export to Downloads, share sheet
@@ -56,8 +56,8 @@ Transform the Meeting App from a scaffolded skeleton into a fully functional mee
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Groq Whisper API client with chunked transcription
-- [ ] 02-02-PLAN.md — Transcription progress UI and error handling
+- [x] 02-01-PLAN.md — Groq Whisper API client with chunked transcription ✅ (2026-06-03)
+- [x] 02-02-PLAN.md — Transcription progress UI and error handling ✅ (2026-06-03)
 
 ### Phase 3: Report Generation
 **Goal**: Raw transcript is processed by Gemini (`gemini-2.0-flash`, fallback `gemini-1.5-flash`) into a cleaned transcript, structured report (JSON schema), and executive summary. Default language generated immediately; other languages on-demand only.
@@ -75,8 +75,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Gemini API client with JSON schema report generation
-- [ ] 03-02-PLAN.md — Processing flow, auto-advance, error states, and on-demand language generation
+- [x] 03-01-PLAN.md — Gemini API client with JSON schema report generation ✅ (2026-06-03)
+- [x] 03-02-PLAN.md — Processing flow, auto-advance, error states, and on-demand language generation ✅ (2026-06-03)
 
 ### Phase 4: Data Persistence & Settings
 **Goal**: Meeting records stored in SQLite via `op-sqlite` with JSON `reports` column. Settings screen with default language, API key management (masked inputs, Keychain storage, test connection), passcode change, clear all data, storage info, about. Mandatory `ApiKeySetupScreen` between Passcode and Main on first launch. `react-native-config` removed.
@@ -142,8 +142,8 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Audio Recording | 3/3 | Complete | 2026-06-03 |
-| 2. Transcription | 0/2 | Not started | - |
-| 3. Report Generation | 0/2 | Not started | - |
+| 2. Transcription | 2/2 | Complete | 2026-06-03 |
+| 3. Report Generation | 2/2 | Complete | 2026-06-03 |
 | 4. Data Persistence & Settings | 0/3 | Not started | - |
 | 5. History & Meeting Detail | 0/3 | Not started | - |
 | 6. Export & Sharing | 0/2 | Not started | - |

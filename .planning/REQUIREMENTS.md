@@ -17,20 +17,20 @@
 
 ### Transcription
 
-- [ ] **TRANS-01**: Each audio chunk sent to Groq Whisper API (`whisper-large-v3-turbo`) with language hint
-- [ ] **TRANS-02**: Response format is `verbose_json` (timestamped segments); chunk progress displayed
-- [ ] **TRANS-03**: Partial transcripts concatenated into a complete raw transcript
-- [ ] **TRANS-04**: Missing or invalid Groq API key shows clear error message
-- [ ] **TRANS-05**: Empty audio chunks skipped gracefully
+- [x] **TRANS-01**: Each audio chunk sent to Groq Whisper API (`whisper-large-v3-turbo`) with language hint
+- [x] **TRANS-02**: Response format is `verbose_json` (timestamped segments); chunk progress displayed
+- [x] **TRANS-03**: Partial transcripts concatenated into a complete raw transcript
+- [x] **TRANS-04**: Missing or invalid Groq API key shows clear error message
+- [x] **TRANS-05**: Empty audio chunks skipped gracefully
 
 ### Report Generation
 
-- [ ] **RPT-01**: Raw transcript sent to Gemini API (`gemini-2.0-flash`, fallback `gemini-1.5-flash`)
-- [ ] **RPT-02**: Gemini returns JSON schema: {report: {overview, keyDiscussionPoints, actionItems, decisionsMade, openQuestions}, summary: [bullets]}; sections omitted if not mentioned
-- [ ] **RPT-03**: Default language report generated immediately after transcription; other languages on-demand only
-- [ ] **RPT-04**: Missing or invalid Gemini API key shows clear error message
-- [ ] **RPT-05**: Empty transcript rejected with clear error message
-- [ ] **RPT-06**: Processing auto-advances to RESULTS on completion; error state provides step-level retry with partial save
+- [x] **RPT-01**: Raw transcript sent to Gemini API (`gemini-2.0-flash`, fallback `gemini-1.5-flash`)
+- [x] **RPT-02**: Gemini returns JSON schema: {report: {overview, keyDiscussionPoints, actionItems, decisionsMade, openQuestions}, summary: [bullets]}; sections omitted if not mentioned
+- [x] **RPT-03**: Default language report generated immediately after transcription; other languages on-demand only
+- [x] **RPT-04**: Missing or invalid Gemini API key shows clear error message
+- [x] **RPT-05**: Empty transcript rejected with clear error message
+- [x] **RPT-06**: Processing auto-advances to RESULTS on completion; error state provides step-level retry with partial save
 
 ### Data Persistence & Settings
 
@@ -108,17 +108,17 @@
 | AUDIO-06 | Phase 1 | Done (01-01, 01-03) |
 | AUDIO-07 | Phase 1 | Pending |
 | AUDIO-08 | Phase 1 | Pending |
-| TRANS-01 | Phase 2 | Pending |
-| TRANS-02 | Phase 2 | Pending |
-| TRANS-03 | Phase 2 | Pending |
-| TRANS-04 | Phase 2 | Pending |
-| TRANS-05 | Phase 2 | Pending |
-| RPT-01 | Phase 3 | Pending |
-| RPT-02 | Phase 3 | Pending |
-| RPT-03 | Phase 3 | Pending |
-| RPT-04 | Phase 3 | Pending |
-| RPT-05 | Phase 3 | Pending |
-| RPT-06 | Phase 3 | Pending |
+| TRANS-01 | Phase 2 | Done (02-01) |
+| TRANS-02 | Phase 2 | Done (02-01) |
+| TRANS-03 | Phase 2 | Done (02-01) |
+| TRANS-04 | Phase 2 | Done (02-01) |
+| TRANS-05 | Phase 2 | Done (02-01) |
+| RPT-01 | Phase 3 | Done (03-01) |
+| RPT-02 | Phase 3 | Done (03-01) |
+| RPT-03 | Phase 3 | Done (03-02) |
+| RPT-04 | Phase 3 | Done (03-01) |
+| RPT-05 | Phase 3 | Done (03-01) |
+| RPT-06 | Phase 3 | Done (03-02) |
 | DATA-01 | Phase 4 | Pending |
 | DATA-02 | Phase 4 | Pending |
 | DATA-03 | Phase 4 | Pending |

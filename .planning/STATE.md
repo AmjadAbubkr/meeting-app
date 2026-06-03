@@ -5,33 +5,35 @@
 See: .planning/PROJECT.md (updated 2026-06-03)
 
 **Core value:** Record a meeting, get a structured bilingual report — from audio to actionable document in one tap
-**Current focus:** Phase 1: Audio Recording
+**Current focus:** Phase 3: Report Generation (Complete)
 
 ## Current Position
 
-Phase: 1 of 6 (Audio Recording)
-Plan: 3 of 3 in current phase (complete)
-Status: Phase 1 Complete
-Last activity: 2026-06-03 — Completed plan 01-03 (Recording and upload UI)
+Phase: 3 of 6 (Report Generation)
+Plan: 2 of 2 in current phase (complete)
+Status: Phases 2 & 3 Complete
+Last activity: 2026-06-03 — Completed Phases 2 and 3 (Transcription + Report Generation)
 
 Progress: █████░░░░░ 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 18m
-- Total execution time: 0.6 hours
+- Total plans completed: 7
+- Average duration: 16m
+- Total execution time: 1.9 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Audio Recording | 3 | 53m | 18m |
+| 2. Transcription | 2 | 30m | 15m |
+| 3. Report Generation | 2 | 30m | 15m |
 
 **Recent Trend:**
-- Last 5 plans: 20m, 8m, 5m
-- Trend: Improving
+- Last 5 plans: 20m, 8m, 5m, 15m, 15m
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -40,6 +42,16 @@ Progress: █████░░░░░ 50%
 ### Decisions
 
 Recent decisions affecting current work:
+
+- (02-03/03-02 execution): MeetingScreen merged Phase 1 recording/upload UI with Phase 2/3 processing pipeline
+- (03-02 execution): Processing pipeline orchestrates transcribe→generate→save with step-level retry
+- (03-02 execution): keepTranscriptOnly salvages partial work when report generation fails
+- (03-01 execution): Gemini responseSchema forces JSON output; primary gemini-2.0-flash, fallback gemini-1.5-flash
+- (03-01 execution): Anti-fabrication prompt: sections omitted if not mentioned in transcript
+- (02-01 execution): Keychain API keys stored as separate services per key (meeting-app-api-groq, meeting-app-api-gemini)
+- (02-01 execution): Audio uploaded as raw bytes via multipart/form-data with TextEncoder + Uint8Array
+- (02-01 execution): Language parameter lowercased (EN→en, FR→fr) before sending to Groq API
+- (02-01 execution): verbose_json format returns timestamped segments; extract text field for concatenation
 
 - (01-03 execution): State-driven rendering pattern — each AppState renders distinct UI section
 - (01-03 execution): PROCESSING state shows only chunking progress, no Show Results button
@@ -87,5 +99,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-03
-Stopped at: Completed 01-03-PLAN.md (Recording and upload UI — Phase 1 complete)
+Stopped at: Completed Phases 2 and 3 (Transcription + Report Generation)
 Resume file: None
