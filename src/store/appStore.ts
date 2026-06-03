@@ -3,6 +3,14 @@ import { create } from 'zustand';
 export type AppState = 'FORM' | 'READY' | 'RECORDING' | 'PROCESSING' | 'RESULTS';
 export type Language = 'EN' | 'FR';
 
+export type ReportData = {
+  overview?: string;
+  keyDiscussionPoints?: string[];
+  actionItems?: string[];
+  decisionsMade?: string[];
+  openQuestions?: string[];
+};
+
 type State = {
   appState: AppState;
   currentMeetingId: number | null;
@@ -10,23 +18,32 @@ type State = {
   meetingDate: string;
   audioChunks: string[];
   rawTranscript: string;
+  cleanedTranscript: string;
   currentLanguage: Language;
-  report: string;
-  summary: string;
+  report: ReportData;
+  summary: string[];
   processingStep: string;
+  processingStepIndex: number;
   chunkCount: number;
   currentChunkIndex: number;
   isAuthenticated: boolean;
+  error: string | null;
+  failedStepIndex: number | null;
   setAppState: (appState: AppState) => void;
   setAuthenticated: (isAuthenticated: boolean) => void;
   setMeeting: (meeting: { id: number | null; title: string; date: string }) => void;
   addAudioChunk: (uri: string) => void;
   setTranscript: (rawTranscript: string) => void;
-  setResults: (report: string, summary: string) => void;
+  setTranscriptFromApi: (rawTranscript: string) => void;
+  setResults: (report: ReportData, summary: string[], cleanedTranscript: string) => void;
   setProcessingStep: (processingStep: string) => void;
+  setProcessingStepIndex: (index: number) => void;
   setLanguage: (currentLanguage: Language) => void;
   setChunkState: (chunkCount: number, currentChunkIndex: number) => void;
   handleRecordingChunk: (uri: string, index: number) => void;
+  handleUploadChunk: (uri: string, chunkIndex: number, totalChunks: number) => void;
+  setError: (error: string) => void;
+  clearError: () => void;
   resetMeeting: () => void;
 };
 
@@ -37,24 +54,37 @@ const initial = {
   meetingDate: '',
   audioChunks: [] as string[],
   rawTranscript: '',
+  cleanedTranscript: '',
   currentLanguage: 'EN' as Language,
-  report: '',
-  summary: '',
+  report: {} as ReportData,
+  summary: [] as string[],
   processingStep: '',
+  processingStepIndex: 0,
   chunkCount: 0,
   currentChunkIndex: 0,
   isAuthenticated: false,
+  error: null as string | null,
+  failedStepIndex: null as number | null,
 };
 
 export const useAppStore = create<State>((set) => ({
   ...initial,
   setAppState: (appState) => set({ appState }),
   setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
-  setMeeting: ({ id, title, date }) => set({ currentMeetingId: id, meetingTitle: title, meetingDate: date }),
-  addAudioChunk: (uri) => set((state) => ({ audioChunks: [...state.audioChunks, uri], chunkCount: state.audioChunks.length + 1 })),
+  setMeeting: ({ id, title, date }) =>
+    set({ currentMeetingId: id, meetingTitle: title, meetingDate: date }),
+  addAudioChunk: (uri) =>
+    set((state) => ({
+      audioChunks: [...state.audioChunks, uri],
+      chunkCount: state.audioChunks.length + 1,
+    })),
   setTranscript: (rawTranscript) => set({ rawTranscript }),
-  setResults: (report, summary) => set({ report, summary }),
+  setTranscriptFromApi: (rawTranscript) =>
+    set({ rawTranscript, processingStepIndex: 1 }),
+  setResults: (report, summary, cleanedTranscript) =>
+    set({ report, summary, cleanedTranscript, processingStepIndex: 2 }),
   setProcessingStep: (processingStep) => set({ processingStep }),
+  setProcessingStepIndex: (index) => set({ processingStepIndex: index }),
   setLanguage: (currentLanguage) => set({ currentLanguage }),
   setChunkState: (chunkCount, currentChunkIndex) => set({ chunkCount, currentChunkIndex }),
   handleRecordingChunk: (uri, index) =>
@@ -64,5 +94,14 @@ export const useAppStore = create<State>((set) => ({
       currentChunkIndex: index,
       processingStep: `Processing chunk ${index + 1}...`,
     })),
+  handleUploadChunk: (uri: string, chunkIndex: number, totalChunks: number) =>
+  set((state) => ({
+    audioChunks: [...state.audioChunks, uri],
+    chunkCount: totalChunks,
+    currentChunkIndex: chunkIndex,
+    processingStep: `Chunking audio ${chunkIndex + 1}/${totalChunks}...`,
+  })),
+  setError: (error: string) => set({ error }),
+  clearError: () => set({ error: null }),
   resetMeeting: () => set(initial),
 }));
