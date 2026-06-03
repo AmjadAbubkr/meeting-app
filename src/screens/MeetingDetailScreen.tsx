@@ -15,6 +15,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { deleteMeeting, getMeeting, updateMeeting, MeetingRecord } from '../db/database';
 import { generateReport } from '../services/generator';
 import { AudioPlayer } from '../components/AudioPlayer';
+import { ExportBottomSheet } from '../components/ExportBottomSheet';
 import type { Language, ReportData } from '../store/appStore';
 
 type Tab = 'report' | 'transcript' | 'audio';
@@ -64,6 +65,7 @@ export function MeetingDetailScreen({ navigation, route }: any) {
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [showRaw, setShowRaw] = useState(false);
+  const [showExport, setShowExport] = useState(false);
 
   // Load meeting on focus
   useFocusEffect(
@@ -354,10 +356,23 @@ export function MeetingDetailScreen({ navigation, route }: any) {
             )}
           </View>
 
-          <Pressable onPress={handleDelete} style={styles.headerBtn}>
-            <Text style={styles.deleteIcon}>{'\uD83D\uDDD1'}</Text>
-          </Pressable>
-        </View>
+      <View style={styles.headerActions}>
+        <Pressable onPress={() => setShowExport(true)} style={styles.headerBtn}>
+          <Text style={styles.shareIcon}>{'\u2197'}</Text>
+        </Pressable>
+        <Pressable onPress={handleDelete} style={styles.headerBtn}>
+          <Text style={styles.deleteIcon}>{'\uD83D\uDDD1'}</Text>
+        </Pressable>
+      </View>
+      </View>
+
+      {/* Export bottom sheet */}
+      <ExportBottomSheet
+        visible={showExport}
+        onClose={() => setShowExport(false)}
+        meeting={meeting}
+        language={currentLang}
+      />
 
         {/* Language switcher (only in Report tab) */}
         {activeTab === 'report' && (
@@ -420,6 +435,10 @@ const styles = StyleSheet.create({
   headerBtn: {
     padding: 8,
   },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 4,
+  },
   backText: {
     color: '#f59e0b',
     fontSize: 16,
@@ -447,6 +466,11 @@ const styles = StyleSheet.create({
   },
   deleteIcon: {
     fontSize: 20,
+  },
+  shareIcon: {
+    color: '#f59e0b',
+    fontSize: 22,
+    fontWeight: '700',
   },
   langRow: {
     flexDirection: 'row',
