@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-06-03)
 ## Current Position
 
 Phase: 1 of 6 (Audio Recording)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-06-03 — Completed plan 01-01 (Audio recording service and chunking)
+Last activity: 2026-06-03 — Completed plan 01-02 (Audio file upload with picker and chunking)
 
-Progress: ██░░░░░░░░ 17%
+Progress: ███░░░░░░░ 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 20m
-- Total execution time: 0.3 hours
+- Total plans completed: 2
+- Average duration: 14m
+- Total execution time: 0.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Audio Recording | 1 | 20m | 20m |
+| 1. Audio Recording | 2 | 28m | 14m |
 
 **Recent Trend:**
-- Last 5 plans: 20m
-- Trend: First plan
+- Last 5 plans: 20m, 8m
+- Trend: Improving
 
 *Updated after each plan completion*
 
@@ -41,6 +41,12 @@ Progress: ██░░░░░░░░ 17%
 
 Recent decisions affecting current work:
 
+- (01-02 execution): DocumentPicker v9 uses default export (not named), imported as `import DocumentPicker, { isCancel }`
+- (01-02 execution): Format validation uses file extension from picker response name, not URI
+- (01-02 execution): Size warning uses Promise-wrapped Alert.alert with Cancel/Continue buttons
+- (01-02 execution): Upload chunking preserves original file extension in output segments
+- (01-02 execution): handleUploadChunk sets chunkCount=totalChunks directly (not incremental)
+- (01-02 execution): Fixed missing setError/clearError implementations in appStore (pre-existing)
 - (01-01 execution): Used react-native-ffmpeg-kit instead of deprecated react-native-ffmpeg (peer dep conflict)
 - (01-01 execution): Used react-native-audio-recorder-player@3.6.14 (v3) instead of v4 (nitro-modules dep)
 - (01-01 execution): Added react-native-fs for file stat/size, directory ops, temp file cleanup
@@ -77,5 +83,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-03
-Stopped at: Completed 01-01-PLAN.md (Audio recording service and chunking logic)
+Stopped at: Completed 01-02-PLAN.md (Audio file upload with picker and chunking)
 Resume file: None

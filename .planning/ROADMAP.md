@@ -37,7 +37,7 @@ Transform the Meeting App from a scaffolded skeleton into a fully functional mee
 - [x] 01-01-PLAN.md — Audio recording service and chunking logic ✅ (2026-06-03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 01-02-PLAN.md — Upload flow with file picker and chunking
+- [x] 01-02-PLAN.md — Upload flow with file picker and chunking ✅ (2026-06-03)
 
 **Wave 3** *(blocked on Wave 1 + Wave 2 completion)*
 - [ ] 01-03-PLAN.md — Recording UI with state display and cancel
@@ -141,7 +141,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Audio Recording | 1/3 | In Progress | 2026-06-03 |
+| 1. Audio Recording | 2/3 | In Progress | 2026-06-03 |
 | 2. Transcription | 0/2 | Not started | - |
 | 3. Report Generation | 0/2 | Not started | - |
 | 4. Data Persistence & Settings | 0/3 | Not started | - |

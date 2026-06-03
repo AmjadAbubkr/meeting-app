@@ -8,8 +8,8 @@
 
 - [x] **AUDIO-01**: User can record meeting audio (AAC/M4A) with start/stop controls via `react-native-audio-recorder-player`
 - [x] **AUDIO-02**: Audio files under 20MB sent as-is; over 20MB split via `react-native-ffmpeg` into valid M4A segments
-- [ ] **AUDIO-03**: User can upload existing audio files (mp3, mp4, wav, m4a, webm) via `react-native-document-picker`
-- [ ] **AUDIO-04**: Uploaded files validated (format + size, warn at 500MB+)
+- [x] **AUDIO-03**: User can upload existing audio files (mp3, mp4, wav, m4a, webm) via `react-native-document-picker`
+- [x] **AUDIO-04**: Uploaded files validated (format + size, warn at 500MB+)
 - [x] **AUDIO-05**: Recording state clearly displayed; screen kept awake during recording; portrait-only
 - [x] **AUDIO-06**: User can cancel a recording and discard audio
 - [ ] **AUDIO-07**: Microphone permission requested on app launch
@@ -102,8 +102,8 @@
 |-------------|-------|--------|
 | AUDIO-01 | Phase 1 | Done (01-01) |
 | AUDIO-02 | Phase 1 | Done (01-01) |
-| AUDIO-03 | Phase 1 | Pending |
-| AUDIO-04 | Phase 1 | Pending |
+| AUDIO-03 | Phase 1 | Done (01-02) |
+| AUDIO-04 | Phase 1 | Done (01-02) |
 | AUDIO-05 | Phase 1 | Done (01-01) |
 | AUDIO-06 | Phase 1 | Done (01-01) |
 | AUDIO-07 | Phase 1 | Pending |
