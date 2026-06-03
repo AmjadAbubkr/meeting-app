@@ -101,7 +101,11 @@ export const useAppStore = create<State>((set) => ({
     currentChunkIndex: chunkIndex,
     processingStep: `Chunking audio ${chunkIndex + 1}/${totalChunks}...`,
   })),
-  setError: (error: string) => set({ error }),
-  clearError: () => set({ error: null }),
+  setError: (error: string) =>
+    set((state) => ({
+      error,
+      failedStepIndex: state.processingStepIndex,
+    })),
+  clearError: () => set({ error: null, failedStepIndex: null }),
   resetMeeting: () => set(initial),
 }));
