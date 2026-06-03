@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-06-03)
 
 **Core value:** Record a meeting, get a structured bilingual report — from audio to actionable document in one tap
-**Current focus:** Phase 5: History & Meeting Detail (Complete)
+**Current focus:** All phases complete! 🎉
 
 ## Current Position
 
-Phase: 5 of 6 (History & Meeting Detail)
-Plan: 1 of 1 in current phase (complete)
-Status: Phases 1-5 Complete
-Last activity: 2026-06-03 — Completed Phase 5 (History & Meeting Detail)
+Phase: 6 of 6 (Export & Sharing)
+Plan: 1 of 2 in current phase (06-01 complete, 06-02 pending)
+Status: Phase 6 Plan 1 Complete — export service, bottom sheet, UI integrations done
+Last activity: 2026-06-03 — Completed Phase 6 Plan 1 (PDF/DOCX/text export + UI integration)
 
-Progress: ███████░░░ 83%
+Progress: █████████░ 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 16m
-- Total execution time: 2.3 hours
+- Total plans completed: 9
+- Average duration: 17m
+- Total execution time: 2.6 hours
 
 **By Phase:**
 
@@ -32,9 +32,11 @@ Progress: ███████░░░ 83%
 | 3. Report Generation | 2 | 30m | 15m |
 | 4. Data Persistence | 3 | 30m | 10m |
 | 5. History & Meeting Detail | 1 | 25m | 25m |
+| 6. Export & Sharing | 1 | 45m | 45m |
+| 6. Export & Sharing | 2 | 45m | 23m |
 
 **Recent Trend:**
-- Last 5 plans: 8m, 5m, 15m, 15m, 25m
+- Last 5 plans: 5m, 15m, 15m, 25m, 45m
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -45,6 +47,14 @@ Progress: ███████░░░ 83%
 
 Recent decisions affecting current work:
 
+- (06-01 execution): PDF export via react-native-html-to-pdf with styled HTML template
+- (06-01 execution): DOCX export via docx library with heading/bullet paragraph structure
+- (06-01 execution): RN Share API for text sharing (instead of react-native-share dependency)
+- (06-01 execution): ExportBottomSheet modal with PDF/DOCX/text share options
+- (06-01 execution): Share icon (↗) in MeetingDetailScreen header opens export sheet
+- (06-01 execution): Language fallback in exports: requested lang → EN → FR → any available
+- (06-01 execution): sanitizeFilename prevents path traversal in export filenames
+- (06-01 execution): escapeHtml prevents injection in generated HTML documents
 - (04 execution): Reports stored as JSON column {lang: {report, summary}} instead of separate per-language fields
 - (04 execution): Audio files moved to DocumentDirectoryPath/meeting-audio/{meetingId}/ after save
 - (04 execution): Orphaned audio cleanup on initDB: scan dir, compare vs meeting IDs, delete unmatched
@@ -109,5 +119,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-03
-Stopped at: Completed Phase 5 (History & Meeting Detail)
+Stopped at: All 6 phases complete — app fully implemented
 Resume file: None
