@@ -6,6 +6,7 @@ import { useRecordingController } from '../services/recorder';
 import { useUploadController } from '../services/uploader';
 import { useProcessingPipeline } from '../services/processingPipeline';
 import { hasApiKey } from '../services/apiKeys';
+import { exportPDF, exportDOCX } from '../services/exporter';
 import { useAppStore } from '../store/appStore';
 
 export function MeetingScreen({ navigation }: any) {
@@ -16,6 +17,9 @@ export function MeetingScreen({ navigation }: any) {
   const meetingTitle = useAppStore((s) => s.meetingTitle);
   const meetingDate = useAppStore((s) => s.meetingDate);
   const currentMeetingId = useAppStore((s) => s.currentMeetingId);
+  const currentLanguage = useAppStore((s) => s.currentLanguage);
+  const rawTranscript = useAppStore((s) => s.rawTranscript);
+  const cleanedTranscript = useAppStore((s) => s.cleanedTranscript);
   const report = useAppStore((s) => s.report);
   const summary = useAppStore((s) => s.summary);
   const setAppState = useAppStore((s) => s.setAppState);
@@ -36,6 +40,7 @@ export function MeetingScreen({ navigation }: any) {
 
   const [title, setTitle] = useState('');
   const [apiKeysReady, setApiKeysReady] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   // Check API keys on mount and when entering READY state
   useEffect(() => {
@@ -55,6 +60,33 @@ export function MeetingScreen({ navigation }: any) {
     }
     setMeeting({ id: null, title: title.trim(), date: dateLabel });
     setAppState('READY');
+  };
+
+  const handleExport = async (format: 'pdf' | 'docx') => {
+    if (currentMeetingId === null) return;
+    try {
+      setExporting(true);
+      // Build a MeetingRecord from current store state for export
+      const meetingForExport = {
+        id: currentMeetingId,
+        title: meetingTitle,
+        date: meetingDate,
+        rawTranscript,
+        cleanedTranscript,
+        reports: JSON.stringify({
+          [currentLanguage]: { report, summary },
+        }),
+      };
+      const path =
+        format === 'pdf'
+          ? await exportPDF(meetingForExport, currentLanguage)
+          : await exportDOCX(meetingForExport, currentLanguage);
+      Alert.alert('Exported', `Saved to ${path}`);
+    } catch (err: any) {
+      Alert.alert('Export Error', err.message || 'Failed to export file.');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleStartRecording = async () => {
@@ -303,6 +335,26 @@ export function MeetingScreen({ navigation }: any) {
             onPress={() => navigation.navigate('MeetingDetail', { meetingId: currentMeetingId })}
             variant="ghost"
           />
+        )}
+
+        {exporting ? (
+          <View style={{ alignItems: 'center', gap: 8, paddingVertical: 12 }}>
+            <ActivityIndicator size="small" color="#f59e0b" />
+            <Text style={{ color: '#94a3b8', fontSize: 14 }}>Exporting...</Text>
+          </View>
+        ) : (
+          <>
+            <PrimaryButton
+              label="Export as PDF"
+              onPress={() => handleExport('pdf')}
+              variant="ghost"
+            />
+            <PrimaryButton
+              label="Export as DOCX"
+              onPress={() => handleExport('docx')}
+              variant="ghost"
+            />
+          </>
         )}
       </ScrollView>
         )}
