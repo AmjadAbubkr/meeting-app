@@ -5,12 +5,13 @@ type Props = {
   label: string;
   onPress: () => void;
   variant?: 'primary' | 'danger' | 'ghost';
+  disabled?: boolean;
 };
 
-export function PrimaryButton({ label, onPress, variant = 'primary' }: Props) {
+export function PrimaryButton({ label, onPress, variant = 'primary', disabled = false }: Props) {
   return (
-    <Pressable onPress={onPress} style={[styles.base, styles[variant]]}>
-      <Text style={styles.text}>{label}</Text>
+    <Pressable onPress={onPress} disabled={disabled} style={[styles.base, styles[variant], disabled && styles.disabled]}>
+      <Text style={[styles.text, disabled && styles.disabledText]}>{label}</Text>
     </Pressable>
   );
 }
@@ -26,5 +27,7 @@ const styles = StyleSheet.create({
   primary: { backgroundColor: '#d97706' },
   danger: { backgroundColor: '#b91c1c' },
   ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#334155' },
+  disabled: { opacity: 0.5 },
   text: { color: 'white', fontWeight: '700', fontSize: 16 },
+  disabledText: { color: '#64748b' },
 });
