@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ScreenShell } from '../components/ScreenShell';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useRecordingController } from '../services/recorder';
 import { useUploadController } from '../services/uploader';
 import { useProcessingPipeline } from '../services/processingPipeline';
+import { hasApiKey } from '../services/apiKeys';
 import { useAppStore } from '../store/appStore';
 
 export function MeetingScreen({ navigation }: any) {
@@ -34,6 +35,16 @@ export function MeetingScreen({ navigation }: any) {
   } = useProcessingPipeline();
 
   const [title, setTitle] = useState('');
+  const [apiKeysReady, setApiKeysReady] = useState(true);
+
+  // Check API keys on mount and when entering READY state
+  useEffect(() => {
+    (async () => {
+      const hasGroq = await hasApiKey('groq');
+      const hasGemini = await hasApiKey('gemini');
+      setApiKeysReady(hasGroq && hasGemini);
+    })();
+  }, [appState]);
 
   const dateLabel = useMemo(() => new Date().toLocaleString(), []);
 
@@ -91,21 +102,51 @@ export function MeetingScreen({ navigation }: any) {
 
         {appState === 'READY' && (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 20 }}>
+            {!apiKeysReady && (
+              <Pressable
+                onPress={() => navigation.navigate('Settings')}
+                style={styles.apiKeyBanner}
+              >
+                <Text style={styles.apiKeyBannerText}>
+                  API keys required. Go to Settings to add them.
+                </Text>
+                <Text style={styles.apiKeyBannerLink}>Open Settings →</Text>
+              </Pressable>
+            )}
             <Pressable
-              onPress={handleStartRecording}
-              style={{
-                width: 160,
-                height: 160,
-                borderRadius: 80,
-                backgroundColor: '#f59e0b',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              onPress={apiKeysReady ? handleStartRecording : undefined}
+              style={[
+                {
+                  width: 160,
+                  height: 160,
+                  borderRadius: 80,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                },
+                apiKeysReady
+                  ? { backgroundColor: '#f59e0b' }
+                  : { backgroundColor: '#334155' },
+              ]}
+              disabled={!apiKeysReady}
             >
-              <Text style={{ color: '#111827', fontWeight: '900' }}>MIC</Text>
+              <Text
+                style={{
+                  color: apiKeysReady ? '#111827' : '#64748b',
+                  fontWeight: '900',
+                }}
+              >
+                MIC
+              </Text>
             </Pressable>
-            <Text style={{ color: 'white', fontSize: 16 }}>Tap to start recording</Text>
-            <PrimaryButton label="Upload Audio" onPress={handleUpload} variant="ghost" />
+            <Text style={{ color: 'white', fontSize: 16 }}>
+              {apiKeysReady ? 'Tap to start recording' : 'Add API keys to continue'}
+            </Text>
+            <PrimaryButton
+              label="Upload Audio"
+              onPress={handleUpload}
+              variant="ghost"
+              disabled={!apiKeysReady}
+            />
             <PrimaryButton label="Cancel" onPress={resetMeeting} variant="ghost" />
           </View>
         )}
@@ -269,3 +310,23 @@ export function MeetingScreen({ navigation }: any) {
     </ScreenShell>
   );
 }
+
+const styles = StyleSheet.create({
+  apiKeyBanner: {
+    backgroundColor: '#7c2d12',
+    borderRadius: 12,
+    padding: 16,
+    width: '100%',
+    gap: 4,
+  },
+  apiKeyBannerText: {
+    color: '#fca5a5',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  apiKeyBannerLink: {
+    color: '#f59e0b',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});
