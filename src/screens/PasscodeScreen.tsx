@@ -3,6 +3,7 @@ import { Alert, Keyboard, Text, TextInput, View } from 'react-native';
 import { ScreenShell } from '../components/ScreenShell';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { hasPasscode, savePasscode, verifyPasscode } from '../services/passcode';
+import { hasApiKey } from '../services/apiKeys';
 import { useAppStore } from '../store/appStore';
 
 export function PasscodeScreen({ navigation }: any) {
@@ -18,6 +19,21 @@ export function PasscodeScreen({ navigation }: any) {
 
   const title = useMemo(() => (mode === 'setup' ? 'Create a passcode' : 'Enter passcode'), [mode]);
 
+  /**
+   * After successful authentication, check if API keys exist.
+   * If both exist, go to Main. Otherwise, go to ApiKeySetup.
+   */
+  const navigateAfterAuth = async () => {
+    const hasGroq = await hasApiKey('groq');
+    const hasGemini = await hasApiKey('gemini');
+
+    if (hasGroq && hasGemini) {
+      navigation.replace('Main');
+    } else {
+      navigation.replace('ApiKeySetup');
+    }
+  };
+
   const handleSubmit = async () => {
     Keyboard.dismiss();
     if (mode === 'setup') {
@@ -31,14 +47,14 @@ export function PasscodeScreen({ navigation }: any) {
       }
       await savePasscode(passcode);
       setAuthenticated(true);
-      navigation.replace('Main');
+      navigateAfterAuth();
       return;
     }
 
     const ok = await verifyPasscode(passcode);
     if (ok) {
       setAuthenticated(true);
-      navigation.replace('Main');
+      navigateAfterAuth();
       return;
     }
 
