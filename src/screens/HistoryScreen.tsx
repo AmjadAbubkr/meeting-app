@@ -3,7 +3,6 @@ import { SectionList, Text, TextInput, View, Pressable, StyleSheet } from 'react
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenShell } from '../components/ScreenShell';
 import { getAllMeetings, MeetingRecord } from '../db/database';
-import { useAppStore } from '../store/appStore';
 
 type DateGroup = 'Today' | 'Yesterday' | 'This Week' | 'Earlier';
 
@@ -49,16 +48,21 @@ function groupMeetingsByDate(meetings: MeetingRecord[]): Section[] {
 }
 
 function getSubtitle(meeting: MeetingRecord): string {
-  // Try to extract an overview from the report
-  const reportKey = (meeting.reportEN || meeting.reportFR) ? 'reportEN' : null;
-  if (reportKey) {
+  // Try to extract an overview from the reports JSON
+  if (meeting.reports) {
     try {
-      const reportJson = meeting[reportKey] || meeting.reportFR || '';
-      const parsed = JSON.parse(reportJson);
-      if (parsed.overview) {
-        return parsed.overview.length > 80
-          ? parsed.overview.substring(0, 80) + '...'
-          : parsed.overview;
+      const parsed = JSON.parse(meeting.reports);
+      // Check EN first, then FR
+      const langData = parsed.EN || parsed.FR;
+      if (langData?.report?.overview) {
+        const overview = langData.report.overview as string;
+        return overview.length > 80 ? overview.substring(0, 80) + '...' : overview;
+      }
+      // Try summary bullets
+      const summary = langData?.summary;
+      if (Array.isArray(summary) && summary.length > 0) {
+        const first = summary[0] as string;
+        return first.length > 80 ? first.substring(0, 80) + '...' : first;
       }
     } catch {
       // Ignore parse errors
