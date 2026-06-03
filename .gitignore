@@ -5,3 +5,7 @@ android/.gradle
 .gradle
 *.keystore
 *.jks
+android/app/build/
+android/build/
+android-build.err.log
+android-build.out.log
