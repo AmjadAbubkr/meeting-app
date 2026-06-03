@@ -30,10 +30,18 @@ Transform the Meeting App from a scaffolded skeleton into a fully functional mee
 5. User can cancel a recording and discard audio
 **Plans**: 3 plans
 
-Plans:
+**Wave 1** *(no dependencies)*
 - [ ] 01-01-PLAN.md — Audio recording service and chunking logic
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 01-02-PLAN.md — Upload flow with file picker and chunking
+
+**Wave 3** *(blocked on Wave 1 + Wave 2 completion)*
 - [ ] 01-03-PLAN.md — Recording UI with state display and cancel
+
+**Cross-cutting constraints:**
+- src/store/appStore.ts is modified in all 3 plans (sequential store augmentation)
+- All plans reference CHUNK_SIZE_BYTES from src/config.ts
 
 ### Phase 2: Transcription
 **Goal**: Audio chunks are sent to Groq Whisper API and concatenated into a full transcript with progress display
@@ -104,7 +112,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Audio Recording | 0/3 | Not started | - |
+| 1. Audio Recording | 0/3 | Planned | - |
 | 2. Transcription | 0/2 | Not started | - |
 | 3. Report Generation | 0/2 | Not started | - |
 | 4. Data Persistence | 0/2 | Not started | - |
