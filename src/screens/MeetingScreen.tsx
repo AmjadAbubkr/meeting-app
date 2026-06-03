@@ -7,13 +7,14 @@ import { useUploadController } from '../services/uploader';
 import { useProcessingPipeline } from '../services/processingPipeline';
 import { useAppStore } from '../store/appStore';
 
-export function MeetingScreen() {
+export function MeetingScreen({ navigation }: any) {
   const appState = useAppStore((s) => s.appState);
   const chunkCount = useAppStore((s) => s.chunkCount);
   const currentChunkIndex = useAppStore((s) => s.currentChunkIndex);
   const processingStep = useAppStore((s) => s.processingStep);
   const meetingTitle = useAppStore((s) => s.meetingTitle);
   const meetingDate = useAppStore((s) => s.meetingDate);
+  const currentMeetingId = useAppStore((s) => s.currentMeetingId);
   const report = useAppStore((s) => s.report);
   const summary = useAppStore((s) => s.summary);
   const setAppState = useAppStore((s) => s.setAppState);
@@ -253,8 +254,16 @@ export function MeetingScreen() {
               </View>
             )}
 
-            <PrimaryButton label="New Meeting" onPress={resetMeeting} />
-          </ScrollView>
+        <PrimaryButton label="New Meeting" onPress={resetMeeting} />
+
+        {currentMeetingId !== null && (
+          <PrimaryButton
+            label="View in History"
+            onPress={() => navigation.navigate('MeetingDetail', { meetingId: currentMeetingId })}
+            variant="ghost"
+          />
+        )}
+      </ScrollView>
         )}
       </View>
     </ScreenShell>
