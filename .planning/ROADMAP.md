@@ -13,7 +13,7 @@ Transform the Meeting App from a scaffolded skeleton into a fully functional mee
 - [x] **Phase 1: Audio Recording** - Real audio recording and upload with chunking ✅
 - [x] **Phase 2: Transcription** - Groq Whisper API integration for audio-to-text ✅
 - [x] **Phase 3: Report Generation** - Gemini API integration for bilingual reports with JSON schema ✅
-- [ ] **Phase 4: Data Persistence & Settings** - SQLite storage, Settings screen, API key management, mandatory setup gate
+- [x] **Phase 4: Data Persistence & Settings** - SQLite storage, Settings screen, API key management, mandatory setup gate ✅
 - [ ] **Phase 5: History & Meeting Detail** - Full history with grouped list, search, meeting detail with tabs (Report/Transcript/Audio), audio playback, language switcher
 - [ ] **Phase 6: Export & Sharing** - PDF/DOCX export to Downloads, share sheet
 
@@ -95,9 +95,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — SQLite database layer with op-sqlite replacing in-memory Map
-- [ ] 04-02-PLAN.md — ApiKeySetupScreen and Keychain-based API key management
-- [ ] 04-03-PLAN.md — Settings screen (language, passcode, clear data, storage, about)
+- [x] 04-01-PLAN.md — SQLite database layer with op-sqlite replacing in-memory Map ✅ (2026-06-03)
+- [x] 04-02-PLAN.md — ApiKeySetupScreen and Keychain-based API key management ✅ (2026-06-03)
+- [x] 04-03-PLAN.md — Settings screen (language, passcode, clear data, storage, about) ✅ (2026-06-03)
 
 ### Phase 5: History & Meeting Detail
 **Goal**: Full meeting history with date grouping (Today/Yesterday/This Week/Earlier) and title search. MeetingDetail screen with 3 tabs: Report (structured sections + executive summary + language switcher), Transcript (cleaned by default, raw toggle), Audio (play/pause + seek + speed control). Delete from detail with confirmation. Editable meeting title.
@@ -112,12 +112,10 @@ Plans:
 6. Audio tab has play/pause, seek bar, speed control (1x, 1.5x, 2x)
 7. Meeting title is editable from detail header
 8. Delete from detail with confirmation dialog (deletes DB record + audio file)
-**Plans**: 3 plans
+**Plans**: 1 plan (consolidated)
 
 Plans:
-- [ ] 05-01-PLAN.md — History screen with date grouping and search
-- [ ] 05-02-PLAN.md — MeetingDetail screen with Report, Transcript, and Audio tabs
-- [ ] 05-03-PLAN.md — Audio playback component with seek and speed control
+- [x] 05-01-PLAN.md — History screen with date grouping, MeetingDetail with 3 tabs, AudioPlayer ✅ (2026-06-03)
 
 ### Phase 6: Export & Sharing
 **Goal**: User can export reports as PDF (`react-native-html-to-pdf`) or DOCX (`docx` library). Files saved to device Downloads (Android 10+). Share icon in MeetingDetail header opens bottom sheet with export options.
@@ -144,6 +142,6 @@ Plans:
 | 1. Audio Recording | 3/3 | Complete | 2026-06-03 |
 | 2. Transcription | 2/2 | Complete | 2026-06-03 |
 | 3. Report Generation | 2/2 | Complete | 2026-06-03 |
-| 4. Data Persistence & Settings | 0/3 | Not started | - |
-| 5. History & Meeting Detail | 0/3 | Not started | - |
+| 4. Data Persistence & Settings | 3/3 | Complete | 2026-06-03 |
+| 5. History & Meeting Detail | 1/1 | Complete | 2026-06-03 |
 | 6. Export & Sharing | 0/2 | Not started | - |

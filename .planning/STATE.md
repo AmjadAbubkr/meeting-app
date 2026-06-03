@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-06-03)
 
 **Core value:** Record a meeting, get a structured bilingual report — from audio to actionable document in one tap
-**Current focus:** Phase 3: Report Generation (Complete)
+**Current focus:** Phase 5: History & Meeting Detail (Complete)
 
 ## Current Position
 
-Phase: 3 of 6 (Report Generation)
-Plan: 2 of 2 in current phase (complete)
-Status: Phases 2 & 3 Complete
-Last activity: 2026-06-03 — Completed Phases 2 and 3 (Transcription + Report Generation)
+Phase: 5 of 6 (History & Meeting Detail)
+Plan: 1 of 1 in current phase (complete)
+Status: Phases 1-5 Complete
+Last activity: 2026-06-03 — Completed Phase 5 (History & Meeting Detail)
 
-Progress: █████░░░░░ 50%
+Progress: ███████░░░ 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: 16m
-- Total execution time: 1.9 hours
+- Total execution time: 2.3 hours
 
 **By Phase:**
 
@@ -30,9 +30,11 @@ Progress: █████░░░░░ 50%
 | 1. Audio Recording | 3 | 53m | 18m |
 | 2. Transcription | 2 | 30m | 15m |
 | 3. Report Generation | 2 | 30m | 15m |
+| 4. Data Persistence | 3 | 30m | 10m |
+| 5. History & Meeting Detail | 1 | 25m | 25m |
 
 **Recent Trend:**
-- Last 5 plans: 20m, 8m, 5m, 15m, 15m
+- Last 5 plans: 8m, 5m, 15m, 15m, 25m
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -43,6 +45,14 @@ Progress: █████░░░░░ 50%
 
 Recent decisions affecting current work:
 
+- (04 execution): Reports stored as JSON column {lang: {report, summary}} instead of separate per-language fields
+- (04 execution): Audio files moved to DocumentDirectoryPath/meeting-audio/{meetingId}/ after save
+- (04 execution): Orphaned audio cleanup on initDB: scan dir, compare vs meeting IDs, delete unmatched
+- (04 execution): Mandatory ApiKeySetupScreen gate between Passcode and Main — checks hasApiKey before routing
+- (04 execution): Settings screen with language, API key management, passcode change, clear data, storage info, about
+- (04 execution): op-sqlite replaced in-memory Map with real SQLite persistence
+- (04 execution): react-native-config fully removed from project
+- (04 execution): Recording blocked in MeetingScreen when API keys missing — banner with Settings link
 - (02-03/03-02 execution): MeetingScreen merged Phase 1 recording/upload UI with Phase 2/3 processing pipeline
 - (03-02 execution): Processing pipeline orchestrates transcribe→generate→save with step-level retry
 - (03-02 execution): keepTranscriptOnly salvages partial work when report generation fails
@@ -99,5 +109,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-03
-Stopped at: Completed Phases 2 and 3 (Transcription + Report Generation)
+Stopped at: Completed Phase 5 (History & Meeting Detail)
 Resume file: None
