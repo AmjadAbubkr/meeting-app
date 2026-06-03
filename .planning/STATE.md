@@ -32,7 +32,6 @@ Progress: ██████████ 100%
 | 3. Report Generation | 2 | 30m | 15m |
 | 4. Data Persistence | 3 | 30m | 10m |
 | 5. History & Meeting Detail | 1 | 25m | 25m |
-| 6. Export & Sharing | 1 | 45m | 45m |
 | 6. Export & Sharing | 2 | 45m | 23m |
 
 **Recent Trend:**
