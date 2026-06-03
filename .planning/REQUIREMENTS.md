@@ -104,8 +104,8 @@
 | AUDIO-02 | Phase 1 | Done (01-01) |
 | AUDIO-03 | Phase 1 | Done (01-02) |
 | AUDIO-04 | Phase 1 | Done (01-02) |
-| AUDIO-05 | Phase 1 | Done (01-01) |
-| AUDIO-06 | Phase 1 | Done (01-01) |
+| AUDIO-05 | Phase 1 | Done (01-01, 01-03) |
+| AUDIO-06 | Phase 1 | Done (01-01, 01-03) |
 | AUDIO-07 | Phase 1 | Pending |
 | AUDIO-08 | Phase 1 | Pending |
 | TRANS-01 | Phase 2 | Pending |

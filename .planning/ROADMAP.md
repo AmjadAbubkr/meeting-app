@@ -10,7 +10,7 @@ Transform the Meeting App from a scaffolded skeleton into a fully functional mee
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Audio Recording** - Real audio recording and upload with chunking
+- [x] **Phase 1: Audio Recording** - Real audio recording and upload with chunking ✅
 - [ ] **Phase 2: Transcription** - Groq Whisper API integration for audio-to-text
 - [ ] **Phase 3: Report Generation** - Gemini API integration for bilingual reports with JSON schema
 - [ ] **Phase 4: Data Persistence & Settings** - SQLite storage, Settings screen, API key management, mandatory setup gate
@@ -40,7 +40,7 @@ Transform the Meeting App from a scaffolded skeleton into a fully functional mee
 - [x] 01-02-PLAN.md — Upload flow with file picker and chunking ✅ (2026-06-03)
 
 **Wave 3** *(blocked on Wave 1 + Wave 2 completion)*
-- [ ] 01-03-PLAN.md — Recording UI with state display and cancel
+- [x] 01-03-PLAN.md — Recording UI with state display and cancel ✅ (2026-06-03)
 
 ### Phase 2: Transcription
 **Goal**: Audio chunks are sent to Groq Whisper API (`whisper-large-v3-turbo`) with language hint and `verbose_json` response format. Chunk-by-chunk progress displayed. Step-level error handling with retry.
@@ -141,7 +141,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Audio Recording | 2/3 | In Progress | 2026-06-03 |
+| 1. Audio Recording | 3/3 | Complete | 2026-06-03 |
 | 2. Transcription | 0/2 | Not started | - |
 | 3. Report Generation | 0/2 | Not started | - |
 | 4. Data Persistence & Settings | 0/3 | Not started | - |
