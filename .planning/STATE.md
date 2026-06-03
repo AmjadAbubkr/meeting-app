@@ -9,29 +9,29 @@ See: .planning/PROJECT.md (updated 2026-06-03)
 
 ## Current Position
 
-Phase: 1 of 5 (Audio Recording)
-Plan: 0 of 3 in current phase
-Status: Ready to execute
-Last activity: 2026-06-03 — Phase 1 planning complete (3 plans, 2 waves)
+Phase: 1 of 6 (Audio Recording)
+Plan: 1 of 3 in current phase
+Status: Executing
+Last activity: 2026-06-03 — Completed plan 01-01 (Audio recording service and chunking)
 
-Progress: ░░░░░░░░░░ 0%
+Progress: ██░░░░░░░░ 17%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 20m
+- Total execution time: 0.3 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 1. Audio Recording | 1 | 20m | 20m |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: 20m
+- Trend: First plan
 
 *Updated after each plan completion*
 
@@ -41,9 +41,20 @@ Progress: ░░░░░░░░░░ 0%
 
 Recent decisions affecting current work:
 
+- (01-01 execution): Used react-native-ffmpeg-kit instead of deprecated react-native-ffmpeg (peer dep conflict)
+- (01-01 execution): Used react-native-audio-recorder-player@3.6.14 (v3) instead of v4 (nitro-modules dep)
+- (01-01 execution): Added react-native-fs for file stat/size, directory ops, temp file cleanup
+- (01-01 execution): ffmpeg segment splitting uses -c:a copy for lossless M4A splitting
+- (Grilling session): 62 decisions documented in PLAN.md
+- (Grilling session): API keys user-provided only, removed react-native-config
+- (Grilling session): op-sqlite with JSON reports column and settings table
+- (Grilling session): Mandatory ApiKeySetupScreen, no skip
+- (Grilling session): Default language generated immediately, others on-demand
+- (Grilling session): Record-to-file then chunk (AAC/M4A)
+- (Grilling session): Keep audio for playback, MeetingDetail with 3 tabs
+- (Grilling session): PDF via react-native-html-to-pdf, DOCX via docx lib
+- (Grilling session): No passcode hashing, no real lockout
 - (Project init): React Native 0.80 CLI + TypeScript + Zustand stack
-- (Project init): Groq Whisper for transcription, Gemini for reports
-- (Project init): SQLite for persistence (replacing in-memory Map)
 
 ### Pending Todos
 
@@ -57,10 +68,14 @@ None yet.
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none)* | | | |
+| v2 | Waveform visualization | Deferred | 2026-06-03 |
+| v2 | Skip back/forward 15s in player | Deferred | 2026-06-03 |
+| v2 | Full-text transcript search | Deferred | 2026-06-03 |
+| v2 | Rich text editing for reports | Deferred | 2026-06-03 |
+| v2 | iOS build | Deferred | 2026-06-03 |
 
 ## Session Continuity
 
 Last session: 2026-06-03
-Stopped at: Project initialization complete
+Stopped at: Completed 01-01-PLAN.md (Audio recording service and chunking logic)
 Resume file: None
