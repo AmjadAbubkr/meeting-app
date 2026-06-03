@@ -26,6 +26,7 @@ type State = {
   setProcessingStep: (processingStep: string) => void;
   setLanguage: (currentLanguage: Language) => void;
   setChunkState: (chunkCount: number, currentChunkIndex: number) => void;
+  handleRecordingChunk: (uri: string, index: number) => void;
   resetMeeting: () => void;
 };
 
@@ -56,5 +57,12 @@ export const useAppStore = create<State>((set) => ({
   setProcessingStep: (processingStep) => set({ processingStep }),
   setLanguage: (currentLanguage) => set({ currentLanguage }),
   setChunkState: (chunkCount, currentChunkIndex) => set({ chunkCount, currentChunkIndex }),
+  handleRecordingChunk: (uri, index) =>
+    set((state) => ({
+      audioChunks: [...state.audioChunks, uri],
+      chunkCount: state.audioChunks.length + 1,
+      currentChunkIndex: index,
+      processingStep: `Processing chunk ${index + 1}...`,
+    })),
   resetMeeting: () => set(initial),
 }));
