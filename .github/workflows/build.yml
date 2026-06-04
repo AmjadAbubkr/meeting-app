@@ -46,16 +46,16 @@ jobs:
         run: |
           echo "$KEYSTORE_FILE" | base64 --decode > android/app/release.keystore
 
-    - name: Make gradlew executable
-      run: chmod +x android/gradlew
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
 
-    - name: Build APK
-      env:
-        KEYSTORE_FILE: android/app/release.keystore
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: cd android && ./gradlew assembleRelease
+      - name: Build APK
+        env:
+          KEYSTORE_FILE: android/app/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: cd android && ./gradlew assembleRelease
 
       - name: Build AAB
         env:
