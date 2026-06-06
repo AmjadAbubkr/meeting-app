@@ -130,7 +130,7 @@ export function AudioPlayer({ audioPath }: Props) {
       <View style={styles.controlsRow}>
         {loading ? (
           <View style={styles.playBtn}>
-            <ActivityIndicator size="small" color="#111827" />
+            <ActivityIndicator size="small" color="#0f0f0f" />
           </View>
         ) : (
           <Pressable
@@ -152,9 +152,9 @@ export function AudioPlayer({ audioPath }: Props) {
           maximumValue={duration || 1}
           value={currentPosition}
           onSlidingComplete={handleSeek}
-          minimumTrackTintColor="#f59e0b"
-          maximumTrackTintColor="#334155"
-          thumbTintColor="#f59e0b"
+          minimumTrackTintColor="#d4a574"
+          maximumTrackTintColor="#1a1a1a"
+          thumbTintColor="#d4a574"
         />
         <View style={styles.timeRow}>
           <Text style={styles.timeText}>{formatMs(currentPosition)}</Text>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   noAudioText: {
-    color: '#64748b',
+    color: '#8a7e72',
     fontSize: 16,
   },
   controlsRow: {
@@ -211,19 +211,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   playBtnActive: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#d4a574',
   },
   playBtnPaused: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#f59e0b',
+    borderColor: '#d4a574',
   },
   playBtnIcon: {
     fontSize: 28,
-    color: '#111827',
+    color: '#0f0f0f',
   },
   playBtnIconPaused: {
-    color: '#f59e0b',
+    color: '#d4a574',
   },
   seekContainer: {
     width: '100%',
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   timeText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 13,
   },
   speedRow: {
@@ -249,21 +249,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#1a1a1a',
   },
   speedChipActive: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#d4a574',
   },
   speedText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontWeight: '700',
     fontSize: 14,
   },
   speedTextActive: {
-    color: '#111827',
+    color: '#0f0f0f',
   },
   errorText: {
-    color: '#f87171',
+    color: '#e74c3c',
     fontSize: 14,
     textAlign: 'center',
   },

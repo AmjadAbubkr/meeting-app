@@ -74,7 +74,7 @@ export function ExportBottomSheet({ visible, onClose, meeting, language = 'EN' }
 
         {exporting ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#f59e0b" />
+            <ActivityIndicator size="large" color="#d4a574" />
             <Text style={styles.loadingText}>
               Exporting as {exportFormat === 'pdf' ? 'PDF' : 'DOCX'}...
             </Text>
@@ -116,13 +116,16 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   container: {
-    backgroundColor: '#111827',
+    backgroundColor: '#1a1a1a',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: 'rgba(212,165,116,0.15)',
   },
   title: {
-    color: 'white',
+    color: '#f5f0eb',
     fontSize: 22,
     fontWeight: '700',
     marginBottom: 20,
@@ -136,7 +139,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   loadingText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 16,
   },
   cancelBtn: {
@@ -145,7 +148,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   cancelText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 16,
   },
 });

@@ -108,7 +108,7 @@ export function ApiKeySetupScreen({ navigation }: any) {
     return (
       <ScreenShell>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#f59e0b" />
+          <ActivityIndicator size="large" color="#d4a574" />
         </View>
       </ScreenShell>
     );
@@ -130,7 +130,7 @@ export function ApiKeySetupScreen({ navigation }: any) {
               value={groqKey}
               onChangeText={setGroqKey}
               placeholder="Groq API Key"
-              placeholderTextColor="#64748b"
+              placeholderTextColor="#8a7e72"
               secureTextEntry
               style={styles.textInput}
               autoCapitalize="none"
@@ -162,7 +162,7 @@ export function ApiKeySetupScreen({ navigation }: any) {
               value={geminiKey}
               onChangeText={setGeminiKey}
               placeholder="Gemini API Key"
-              placeholderTextColor="#64748b"
+              placeholderTextColor="#8a7e72"
               secureTextEntry
               style={styles.textInput}
               autoCapitalize="none"
@@ -198,7 +198,7 @@ export function ApiKeySetupScreen({ navigation }: any) {
 
 function renderStatusIcon(status: KeyStatus) {
   if (status === 'testing') {
-    return <ActivityIndicator size="small" color="#f59e0b" style={styles.statusIcon} />;
+    return <ActivityIndicator size="small" color="#d4a574" style={styles.statusIcon} />;
   }
   if (status === 'valid') {
     return <Text style={styles.validIcon}>{'\u2713'}</Text>;
@@ -219,19 +219,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: 'white',
+    color: '#e8d5b7',
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   subtitle: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 16,
   },
   section: {
     gap: 10,
   },
   sectionTitle: {
-    color: 'white',
+    color: '#f5f0eb',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -242,23 +242,25 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    backgroundColor: '#111827',
-    color: 'white',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#141414',
+    color: '#f5f0eb',
+    borderRadius: 8,
+    padding: 14,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(212,165,116,0.15)',
   },
   statusIcon: {
     width: 28,
     height: 28,
   },
   validIcon: {
-    color: '#22c55e',
+    color: '#6dbf67',
     fontSize: 28,
     fontWeight: '700',
   },
   invalidIcon: {
-    color: '#ef4444',
+    color: '#e74c3c',
     fontSize: 28,
     fontWeight: '700',
   },
@@ -267,7 +269,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   savedLabel: {
-    color: '#22c55e',
+    color: '#6dbf67',
     fontSize: 13,
   },
 });

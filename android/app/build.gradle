@@ -73,14 +73,14 @@ def enableProguardInReleaseBuilds = false
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
-    buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
+    buildToolsVersion = rootProject.ext.buildToolsVersion
+    compileSdk = rootProject.ext.compileSdkVersion
 
-    namespace "com.meetingapp"
+    namespace = "com.meetingapp"
     defaultConfig {
-        applicationId "com.meetingapp"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+  applicationId "com.meetingapp"
+  minSdk = rootProject.ext.minSdkVersion
+  targetSdk = rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "0.1.0"
     }
@@ -106,11 +106,11 @@ android {
     }
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            signingConfig = signingConfigs.debug
         }
         release {
-            signingConfig hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
-            minifyEnabled enableProguardInReleaseBuilds
+            signingConfig = hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled = enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }

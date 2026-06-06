@@ -11,6 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step to free up disk space by removing pre-installed software we don't need (e.g., .NET, Haskell, Boost)
+      - name: Free Disk Space
+        run: |
+          echo "Disk space before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          echo "Disk space after cleanup:"
+          df -h
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -49,28 +61,36 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
+      # Build the APK. We restrict to arm64-v8a to build faster and use less disk space.
       - name: Build APK
         env:
           KEYSTORE_FILE: android/app/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: cd android && ./gradlew assembleRelease
+        run: cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
 
-      - name: Build AAB
-        env:
-          KEYSTORE_FILE: android/app/release.keystore
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: cd android && ./gradlew bundleRelease
-
+      # Upload APK immediately so we can clean the workspace before building the AAB
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: meeting-app-apk
           path: android/app/build/outputs/apk/release/app-release.apk
 
+      # Clean the gradle build files to reclaim disk space before starting the AAB build
+      - name: Clean build files
+        run: cd android && ./gradlew clean
+
+      # Build the AAB. We also restrict to arm64-v8a to save disk space and build time.
+      - name: Build AAB
+        env:
+          KEYSTORE_FILE: android/app/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: cd android && ./gradlew bundleRelease -PreactNativeArchitectures=arm64-v8a
+
+      # Upload AAB artifact
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:

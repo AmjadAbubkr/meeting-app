@@ -246,7 +246,7 @@ export function SettingsScreen({ navigation }: any) {
                     ? 'New 6-digit passcode'
                     : 'Confirm new passcode'
               }
-              placeholderTextColor="#64748b"
+              placeholderTextColor="#8a7e72"
               keyboardType="number-pad"
               secureTextEntry
               maxLength={6}
@@ -315,7 +315,7 @@ export function SettingsScreen({ navigation }: any) {
                 </View>
                 <View style={styles.keyActions}>
                   {testingKey === 'groq' ? (
-                    <ActivityIndicator size="small" color="#f59e0b" />
+                    <ActivityIndicator size="small" color="#d4a574" />
                   ) : testResult === 'valid' && editingKey === 'groq' ? (
                     <Text style={styles.validIcon}>{'\u2713'}</Text>
                   ) : testResult === 'invalid' && editingKey === 'groq' ? (
@@ -335,7 +335,7 @@ export function SettingsScreen({ navigation }: any) {
                     value={editingKeyValue}
                     onChangeText={setEditingKeyValue}
                     placeholder="Enter new Groq key"
-                    placeholderTextColor="#64748b"
+                    placeholderTextColor="#8a7e72"
                     secureTextEntry
                     style={styles.textInput}
                     autoCapitalize="none"
@@ -362,7 +362,7 @@ export function SettingsScreen({ navigation }: any) {
                 </View>
                 <View style={styles.keyActions}>
                   {testingKey === 'gemini' ? (
-                    <ActivityIndicator size="small" color="#f59e0b" />
+                    <ActivityIndicator size="small" color="#d4a574" />
                   ) : testResult === 'valid' && editingKey === 'gemini' ? (
                     <Text style={styles.validIcon}>{'\u2713'}</Text>
                   ) : testResult === 'invalid' && editingKey === 'gemini' ? (
@@ -382,7 +382,7 @@ export function SettingsScreen({ navigation }: any) {
                     value={editingKeyValue}
                     onChangeText={setEditingKeyValue}
                     placeholder="Enter new Gemini key"
-                    placeholderTextColor="#64748b"
+                    placeholderTextColor="#8a7e72"
                     secureTextEntry
                     style={styles.textInput}
                     autoCapitalize="none"
@@ -441,15 +441,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: 'white',
+    color: '#e8d5b7',
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   section: {
     gap: 12,
   },
   sectionTitle: {
-    color: '#f59e0b',
+    color: '#d4a574',
     fontSize: 16,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -463,41 +463,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 24,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#1a1a1a',
   },
   chipActive: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#d4a574',
   },
   chipText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontWeight: '700',
     fontSize: 15,
   },
   chipTextActive: {
-    color: '#111827',
+    color: '#0f0f0f',
   },
   keyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#111827',
-    borderRadius: 12,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 8,
     padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(212,165,116,0.15)',
   },
   keyInfo: {
     gap: 2,
   },
   keyLabel: {
-    color: 'white',
+    color: '#f5f0eb',
     fontSize: 15,
     fontWeight: '600',
   },
   keySet: {
-    color: '#22c55e',
+    color: '#6dbf67',
     fontSize: 13,
   },
   keyNotSet: {
-    color: '#ef4444',
+    color: '#e74c3c',
     fontSize: 13,
   },
   keyActions: {
@@ -506,12 +508,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   validIcon: {
-    color: '#22c55e',
+    color: '#6dbf67',
     fontSize: 22,
     fontWeight: '700',
   },
   invalidIcon: {
-    color: '#ef4444',
+    color: '#e74c3c',
     fontSize: 22,
     fontWeight: '700',
   },
@@ -519,10 +521,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#1a1a1a',
   },
   smallBtnText: {
-    color: '#f59e0b',
+    color: '#d4a574',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -530,10 +532,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#1a1a1a',
   },
   smallBtnDangerText: {
-    color: '#ef4444',
+    color: '#e74c3c',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -541,11 +543,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   textInput: {
-    backgroundColor: '#111827',
-    color: 'white',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#141414',
+    color: '#f5f0eb',
+    borderRadius: 8,
+    padding: 14,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(212,165,116,0.15)',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -555,16 +559,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   editBtnText: {
-    color: '#f59e0b',
+    color: '#d4a574',
     fontSize: 14,
     fontWeight: '600',
   },
   bodyText: {
-    color: '#e2e8f0',
+    color: '#f5f0eb',
     fontSize: 16,
   },
   subtitleText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 14,
   },
 });

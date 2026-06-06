@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PasscodeScreen } from './src/screens/PasscodeScreen';
 import { ApiKeySetupScreen } from './src/screens/ApiKeySetupScreen';
 import { MeetingScreen } from './src/screens/MeetingScreen';
@@ -16,46 +15,56 @@ import { hasApiKey } from './src/services/apiKeys';
 import { initDB } from './src/db/database';
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
 
-function MainTabs() {
+function TopNavBar({ active, onNavigate }: { active: string; onNavigate: (screen: string) => void }) {
+  const insets = useSafeAreaInsets();
+  const links = ['Meeting', 'History', 'Settings'];
+
   return (
-    <Tab.Navigator
-      screenOptions={{ headerShown: false }}
-      initialRouteName="Meeting"
-    >
-      <Tab.Screen
-        name="Meeting"
-        component={MeetingScreen}
-        options={{
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>{'\uD83C\uDF99'}</Text>,
-        }}
-      />
-      <Tab.Screen
-        name="History"
-        component={HistoryScreen}
-        options={{
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>{'\uD83D\uDCCB'}</Text>,
-        }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>{'\u2699'}</Text>,
-        }}
-      />
-    </Tab.Navigator>
+    <View style={[styles.navBar, { paddingTop: insets.top }]}>
+      <View style={styles.navContent}>
+        <Text style={styles.navBrand}>Meeting</Text>
+        <View style={styles.navLinks}>
+          {links.map((link) => (
+            <Pressable
+              key={link}
+              onPress={() => onNavigate(link)}
+              style={[styles.navLink, active === link && styles.navLinkActive]}
+            >
+              <Text style={[styles.navLinkText, active === link && styles.navLinkTextActive]}>
+                {link}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+    </View>
   );
 }
 
-/**
- * Loading screen shown while checking auth state on app launch.
- */
+function MainScreen({ navigation }: any) {
+  const [activeTab, setActiveTab] = useState('Meeting');
+
+  const handleNavigate = (screen: string) => {
+    setActiveTab(screen);
+  };
+
+  return (
+    <View style={styles.mainContainer}>
+      <TopNavBar active={activeTab} onNavigate={handleNavigate} />
+      <View style={styles.screenContainer}>
+        {activeTab === 'Meeting' && <MeetingScreen navigation={navigation} />}
+        {activeTab === 'History' && <HistoryScreen navigation={navigation} />}
+        {activeTab === 'Settings' && <SettingsScreen navigation={navigation} />}
+      </View>
+    </View>
+  );
+}
+
 function LoadingScreen() {
   return (
-    <View style={{ flex: 1, backgroundColor: '#0b1220', justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color="#f59e0b" />
+    <View style={{ flex: 1, backgroundColor: '#0f0f0f', justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#d4a574" />
     </View>
   );
 }
@@ -64,10 +73,8 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [initialRoute, setInitialRoute] = useState<'Passcode' | 'ApiKeySetup' | 'Main'>('Passcode');
 
-  // Determine initial route based on auth state
   useEffect(() => {
     (async () => {
-      // Initialize database first
       await initDB();
 
       const passcodeExists = await hasPasscode();
@@ -78,7 +85,6 @@ export default function App() {
         return;
       }
 
-      // Passcode exists — check API keys
       const hasGroq = await hasApiKey('groq');
       const hasGemini = await hasApiKey('gemini');
 
@@ -112,7 +118,7 @@ export default function App() {
           >
             <Stack.Screen name="Passcode" component={PasscodeScreen} />
             <Stack.Screen name="ApiKeySetup" component={ApiKeySetupScreen} />
-            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="Main" component={MainScreen} />
             <Stack.Screen
               name="MeetingDetail"
               component={MeetingDetailScreen}
@@ -124,3 +130,52 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  navBar: {
+    backgroundColor: 'rgba(15,15,15,0.9)',
+    borderBottomColor: 'rgba(212,165,116,0.15)',
+    borderBottomWidth: 1,
+  },
+  navContent: {
+    height: 54,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  navBrand: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#d4a574',
+    letterSpacing: 0.5,
+  },
+  navLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  navLink: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  navLinkActive: {
+    backgroundColor: 'rgba(212,165,116,0.1)',
+  },
+  navLinkText: {
+    color: '#8a7e72',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  navLinkTextActive: {
+    color: '#d4a574',
+  },
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#0f0f0f',
+  },
+  screenContainer: {
+    flex: 1,
+  },
+});

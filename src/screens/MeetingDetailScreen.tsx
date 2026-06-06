@@ -178,10 +178,10 @@ export function MeetingDetailScreen({ navigation, route }: any) {
     if (generating) {
       return (
         <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color="#f59e0b" />
-          <Text style={styles.generatingText}>
-            Generating report in {currentLang === 'EN' ? 'English' : 'French'}...
-          </Text>
+      <ActivityIndicator size="large" color="#d4a574" />
+      <Text style={styles.generatingText}>
+        Generating report in {currentLang === 'EN' ? 'English' : 'French'}...
+      </Text>
         </View>
       );
     }
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   backText: {
-    color: '#f59e0b',
+    color: '#d4a574',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -449,17 +449,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   titleText: {
-    color: 'white',
+    color: '#f5f0eb',
     fontSize: 20,
     fontWeight: '700',
     textAlign: 'center',
   },
   titleInput: {
-    color: 'white',
+    color: '#f5f0eb',
     fontSize: 20,
     fontWeight: '700',
     textAlign: 'center',
-    borderBottomColor: '#f59e0b',
+    borderBottomColor: '#d4a574',
     borderBottomWidth: 1,
     paddingVertical: 2,
     minWidth: 100,
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   shareIcon: {
-    color: '#f59e0b',
+    color: '#d4a574',
     fontSize: 22,
     fontWeight: '700',
   },
@@ -481,22 +481,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#1a1a1a',
   },
   langChipActive: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#d4a574',
   },
   langText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontWeight: '700',
     fontSize: 14,
   },
   langTextActive: {
-    color: '#111827',
+    color: '#0f0f0f',
   },
   tabBar: {
     flexDirection: 'row',
-    borderBottomColor: '#334155',
+    borderBottomColor: 'rgba(212,165,116,0.15)',
     borderBottomWidth: 1,
   },
   tabBtn: {
@@ -507,15 +507,15 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabBtnActive: {
-    borderBottomColor: '#f59e0b',
+    borderBottomColor: '#d4a574',
   },
   tabLabel: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontWeight: '600',
     fontSize: 15,
   },
   tabLabelActive: {
-    color: '#f59e0b',
+    color: '#d4a574',
   },
   tabContentContainer: {
     flex: 1,
@@ -531,17 +531,17 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   generatingText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 16,
     textAlign: 'center',
   },
   errorText: {
-    color: '#f87171',
+    color: '#e74c3c',
     fontSize: 14,
     textAlign: 'center',
   },
   noReportText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 16,
     textAlign: 'center',
   },
@@ -549,22 +549,22 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   sectionTitle: {
-    color: '#f59e0b',
+    color: '#d4a574',
     fontSize: 18,
     fontWeight: '700',
   },
   sectionSubtitle: {
-    color: '#f59e0b',
+    color: '#d4a574',
     fontSize: 16,
     fontWeight: '600',
   },
   bulletText: {
-    color: '#e2e8f0',
+    color: '#f5f0eb',
     fontSize: 14,
     lineHeight: 20,
   },
   bodyText: {
-    color: '#e2e8f0',
+    color: '#f5f0eb',
     fontSize: 14,
     lineHeight: 20,
   },
@@ -577,26 +577,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#1a1a1a',
   },
   toggleChipActive: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#d4a574',
   },
   toggleText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontWeight: '600',
     fontSize: 14,
   },
   toggleTextActive: {
-    color: '#111827',
+    color: '#0f0f0f',
   },
   transcriptText: {
-    color: '#e2e8f0',
+    color: '#f5f0eb',
     fontSize: 14,
     lineHeight: 22,
   },
   noDataText: {
-    color: '#64748b',
+    color: '#8a7e72',
     fontSize: 16,
     textAlign: 'center',
     marginTop: 40,

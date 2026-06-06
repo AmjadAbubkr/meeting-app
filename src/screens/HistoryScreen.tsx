@@ -119,7 +119,7 @@ export function HistoryScreen({ navigation }: any) {
           value={searchText}
           onChangeText={setSearchText}
           placeholder="Search meetings..."
-          placeholderTextColor="#64748b"
+          placeholderTextColor="#8a7e72"
           style={styles.searchInput}
         />
 
@@ -164,19 +164,21 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   headerTitle: {
-    color: 'white',
+    color: '#e8d5b7',
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   searchInput: {
-    backgroundColor: '#111827',
-    color: 'white',
-    borderRadius: 12,
+    backgroundColor: '#141414',
+    color: '#f5f0eb',
+    borderRadius: 8,
     padding: 14,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(212,165,116,0.15)',
   },
   sectionTitle: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 14,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -184,28 +186,30 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   card: {
-    backgroundColor: '#111827',
-    borderRadius: 14,
+    backgroundColor: 'rgba(26,26,26,0.8)',
+    borderRadius: 12,
     padding: 16,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(212,165,116,0.15)',
   },
   cardTitle: {
-    color: 'white',
+    color: '#e8d5b7',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   cardDate: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 13,
     marginTop: 2,
   },
   cardSubtitle: {
-    color: '#64748b',
+    color: '#8a7e72',
     fontSize: 14,
     marginTop: 4,
   },
   emptyText: {
-    color: '#94a3b8',
+    color: '#8a7e72',
     fontSize: 16,
     textAlign: 'center',
     marginTop: 40,

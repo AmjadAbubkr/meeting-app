@@ -38,9 +38,10 @@
     "@types/react": "^19.1.0",
     "@types/react-native-keep-awake": "^2.0.8",
     "@types/react-test-renderer": "^19.1.0",
+    "@react-native/babel-preset": "^0.80.0",
+    "@react-native/metro-config": "^0.80.0",
     "babel-jest": "^30.0.0",
     "jest": "^30.0.0",
-    "metro-react-native-babel-preset": "^0.77.0",
     "prettier": "2.8.8",
     "typescript": "^5.8.3"
   },

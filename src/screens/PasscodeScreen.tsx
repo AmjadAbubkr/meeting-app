@@ -66,32 +66,32 @@ export function PasscodeScreen({ navigation }: any) {
   return (
     <ScreenShell>
       <View style={{ flex: 1, justifyContent: 'center', gap: 16 }}>
-        <Text style={{ color: 'white', fontSize: 32, fontWeight: '800' }}>{title}</Text>
-        <Text style={{ color: '#94a3b8' }}>
-          {mode === 'setup' ? 'Set a 6-digit PIN to protect the app.' : 'Use your 6-digit PIN to continue.'}
-        </Text>
-        <TextInput
-          value={passcode}
-          onChangeText={setPasscode}
-          placeholder="123456"
-          placeholderTextColor="#64748b"
-          keyboardType="number-pad"
-          secureTextEntry
-          maxLength={6}
-          style={{ backgroundColor: '#111827', color: 'white', borderRadius: 12, padding: 16, fontSize: 18 }}
-        />
-        {mode === 'setup' && (
-          <TextInput
-            value={confirmPasscode}
-            onChangeText={setConfirmPasscode}
-            placeholder="Confirm PIN"
-            placeholderTextColor="#64748b"
-            keyboardType="number-pad"
-            secureTextEntry
-            maxLength={6}
-            style={{ backgroundColor: '#111827', color: 'white', borderRadius: 12, padding: 16, fontSize: 18 }}
-          />
-        )}
+    <Text style={{ color: '#e8d5b7', fontSize: 32, fontWeight: '700' }}>{title}</Text>
+    <Text style={{ color: '#8a7e72' }}>
+      {mode === 'setup' ? 'Set a 6-digit PIN to protect the app.' : 'Use your 6-digit PIN to continue.'}
+    </Text>
+    <TextInput
+      value={passcode}
+      onChangeText={setPasscode}
+      placeholder="123456"
+      placeholderTextColor="#8a7e72"
+      keyboardType="number-pad"
+      secureTextEntry
+      maxLength={6}
+      style={{ backgroundColor: '#141414', color: '#f5f0eb', borderRadius: 8, padding: 16, fontSize: 18, borderWidth: 1, borderColor: 'rgba(212,165,116,0.15)' }}
+    />
+    {mode === 'setup' && (
+      <TextInput
+        value={confirmPasscode}
+        onChangeText={setConfirmPasscode}
+        placeholder="Confirm PIN"
+        placeholderTextColor="#8a7e72"
+        keyboardType="number-pad"
+        secureTextEntry
+        maxLength={6}
+        style={{ backgroundColor: '#141414', color: '#f5f0eb', borderRadius: 8, padding: 16, fontSize: 18, borderWidth: 1, borderColor: 'rgba(212,165,116,0.15)' }}
+      />
+    )}
         <PrimaryButton label="Continue" onPress={handleSubmit} />
       </View>
     </ScreenShell>

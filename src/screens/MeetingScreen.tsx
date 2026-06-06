@@ -116,7 +116,7 @@ export function MeetingScreen({ navigation }: any) {
   return (
     <ScreenShell>
       <View style={{ flex: 1, gap: 16 }}>
-        <Text style={{ color: 'white', fontSize: 28, fontWeight: '800' }}>Meeting</Text>
+        <Text style={{ color: '#e8d5b7', fontSize: 28, fontWeight: '700' }}>Meeting</Text>
 
         {appState === 'FORM' && (
           <View style={{ gap: 12 }}>
@@ -124,10 +124,10 @@ export function MeetingScreen({ navigation }: any) {
               value={title}
               onChangeText={setTitle}
               placeholder="Meeting title"
-              placeholderTextColor="#64748b"
-              style={{ backgroundColor: '#111827', color: 'white', borderRadius: 12, padding: 16 }}
-            />
-            <Text style={{ color: '#94a3b8' }}>{dateLabel}</Text>
+          placeholderTextColor="#8a7e72"
+          style={{ backgroundColor: '#141414', color: '#f5f0eb', borderRadius: 8, padding: 14, borderWidth: 1, borderColor: 'rgba(212,165,116,0.15)' }}
+        />
+        <Text style={{ color: '#e8d5b7' }}>{dateLabel}</Text>
             <PrimaryButton label="Create Meeting" onPress={createMeeting} />
           </View>
         )}
@@ -137,40 +137,45 @@ export function MeetingScreen({ navigation }: any) {
             {!apiKeysReady && (
               <Pressable
                 onPress={() => navigation.navigate('Settings')}
-                style={styles.apiKeyBanner}
-              >
-                <Text style={styles.apiKeyBannerText}>
-                  API keys required. Go to Settings to add them.
-                </Text>
-                <Text style={styles.apiKeyBannerLink}>Open Settings →</Text>
-              </Pressable>
+              style={styles.apiKeyBanner}
+            >
+              <Text style={styles.apiKeyBannerText}>
+                API keys required. Go to Settings to add them.
+              </Text>
+              <Text style={styles.apiKeyBannerLink}>Open Settings →</Text>
+            </Pressable>
             )}
             <Pressable
               onPress={apiKeysReady ? handleStartRecording : undefined}
               style={[
                 {
-                  width: 160,
-                  height: 160,
-                  borderRadius: 80,
+                  width: 130,
+                  height: 130,
+                  borderRadius: 65,
                   alignItems: 'center',
                   justifyContent: 'center',
+                  shadowColor: 'rgba(212,165,116,0.25)',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 1,
+                  shadowRadius: 20,
+                  elevation: 8,
                 },
                 apiKeysReady
-                  ? { backgroundColor: '#f59e0b' }
-                  : { backgroundColor: '#334155' },
+                  ? { backgroundColor: '#d4a574' }
+                  : { backgroundColor: '#1a1a1a' },
               ]}
               disabled={!apiKeysReady}
             >
               <Text
                 style={{
-                  color: apiKeysReady ? '#111827' : '#64748b',
+                  color: apiKeysReady ? '#0f0f0f' : '#8a7e72',
                   fontWeight: '900',
                 }}
               >
                 MIC
               </Text>
             </Pressable>
-            <Text style={{ color: 'white', fontSize: 16 }}>
+            <Text style={{ color: '#e8d5b7', fontSize: 16 }}>
               {apiKeysReady ? 'Tap to start recording' : 'Add API keys to continue'}
             </Text>
             <PrimaryButton
@@ -185,16 +190,12 @@ export function MeetingScreen({ navigation }: any) {
 
         {appState === 'RECORDING' && (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 18 }}>
-            <Text style={{ color: 'white', fontSize: 24, fontWeight: '700' }}>Recording...</Text>
-            <View
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: '#f87171',
-              }}
-            />
-            <Text style={{ color: '#f87171' }}>
+            <View style={styles.recordingIndicator}>
+              <View style={styles.recordingDot} />
+              <Text style={styles.recordingLabel}>Recording</Text>
+            </View>
+            <Text style={{ color: '#e8d5b7', fontSize: 24, fontWeight: '700' }}>Recording...</Text>
+            <Text style={{ color: '#ff4757' }}>
               {' '}Chunk {currentChunkIndex + 1} / {chunkCount}{' '}
             </Text>
             <PrimaryButton label="End Meeting" onPress={recordingController.stop} variant="danger" />
@@ -204,8 +205,8 @@ export function MeetingScreen({ navigation }: any) {
 
         {appState === 'PROCESSING' && !error && (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16 }}>
-            <ActivityIndicator size="large" color="#f59e0b" />
-            <Text style={{ color: 'white', fontSize: 22, fontWeight: '700' }}>
+            <ActivityIndicator size="large" color="#d4a574" />
+            <Text style={{ color: '#e8d5b7', fontSize: 22, fontWeight: '700' }}>
               {processingStep || stepLabel}
             </Text>
           </View>
@@ -221,10 +222,10 @@ export function MeetingScreen({ navigation }: any) {
               padding: 20,
             }}
           >
-            <Text style={{ color: '#f87171', fontSize: 20, fontWeight: '700' }}>
+            <Text style={{ color: '#ff4757', fontSize: 20, fontWeight: '700' }}>
               Processing Failed
             </Text>
-            <Text style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center' }}>
+            <Text style={{ color: '#8a7e72', fontSize: 14, textAlign: 'center' }}>
               {error}
             </Text>
 
@@ -252,80 +253,80 @@ export function MeetingScreen({ navigation }: any) {
 
         {appState === 'RESULTS' && (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 12 }}>
-            <Text style={{ color: 'white', fontSize: 24, fontWeight: '700' }}>
-              {meetingTitle}
+        <Text style={{ color: '#e8d5b7', fontSize: 24, fontWeight: '700' }}>
+          {meetingTitle}
+        </Text>
+        <Text style={{ color: '#8a7e72' }}>{meetingDate}</Text>
+
+        {summary.length > 0 && (
+          <View style={{ gap: 8 }}>
+            <Text style={{ color: '#d4a574', fontSize: 18, fontWeight: '700' }}>Summary</Text>
+            {summary.map((bullet, idx) => (
+              <Text key={idx} style={{ color: '#f5f0eb', fontSize: 14 }}>
+                {'\u2022'} {bullet}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {report.overview && (
+          <View style={{ gap: 4 }}>
+            <Text style={{ color: '#d4a574', fontSize: 16, fontWeight: '600' }}>Overview</Text>
+            <Text style={{ color: '#f5f0eb', fontSize: 14 }}>{report.overview}</Text>
+          </View>
+        )}
+
+        {report.keyDiscussionPoints && report.keyDiscussionPoints.length > 0 && (
+          <View style={{ gap: 4 }}>
+            <Text style={{ color: '#d4a574', fontSize: 16, fontWeight: '600' }}>
+              Key Discussion Points
             </Text>
-            <Text style={{ color: '#94a3b8' }}>{meetingDate}</Text>
+            {report.keyDiscussionPoints.map((point, idx) => (
+              <Text key={idx} style={{ color: '#f5f0eb', fontSize: 14 }}>
+                {'\u2022'} {point}
+              </Text>
+            ))}
+          </View>
+        )}
 
-            {summary.length > 0 && (
-              <View style={{ gap: 8 }}>
-                <Text style={{ color: '#f59e0b', fontSize: 18, fontWeight: '700' }}>Summary</Text>
-                {summary.map((bullet, idx) => (
-                  <Text key={idx} style={{ color: '#e2e8f0', fontSize: 14 }}>
-                    {'\u2022'} {bullet}
-                  </Text>
-                ))}
-              </View>
-            )}
+        {report.actionItems && report.actionItems.length > 0 && (
+          <View style={{ gap: 4 }}>
+            <Text style={{ color: '#d4a574', fontSize: 16, fontWeight: '600' }}>
+              Action Items
+            </Text>
+            {report.actionItems.map((item, idx) => (
+              <Text key={idx} style={{ color: '#f5f0eb', fontSize: 14 }}>
+                {'\u2022'} {item}
+              </Text>
+            ))}
+          </View>
+        )}
 
-            {report.overview && (
-              <View style={{ gap: 4 }}>
-                <Text style={{ color: '#f59e0b', fontSize: 16, fontWeight: '600' }}>Overview</Text>
-                <Text style={{ color: '#e2e8f0', fontSize: 14 }}>{report.overview}</Text>
-              </View>
-            )}
+        {report.decisionsMade && report.decisionsMade.length > 0 && (
+          <View style={{ gap: 4 }}>
+            <Text style={{ color: '#d4a574', fontSize: 16, fontWeight: '600' }}>
+              Decisions Made
+            </Text>
+            {report.decisionsMade.map((decision, idx) => (
+              <Text key={idx} style={{ color: '#f5f0eb', fontSize: 14 }}>
+                {'\u2022'} {decision}
+              </Text>
+            ))}
+          </View>
+        )}
 
-            {report.keyDiscussionPoints && report.keyDiscussionPoints.length > 0 && (
-              <View style={{ gap: 4 }}>
-                <Text style={{ color: '#f59e0b', fontSize: 16, fontWeight: '600' }}>
-                  Key Discussion Points
-                </Text>
-                {report.keyDiscussionPoints.map((point, idx) => (
-                  <Text key={idx} style={{ color: '#e2e8f0', fontSize: 14 }}>
-                    {'\u2022'} {point}
-                  </Text>
-                ))}
-              </View>
-            )}
-
-            {report.actionItems && report.actionItems.length > 0 && (
-              <View style={{ gap: 4 }}>
-                <Text style={{ color: '#f59e0b', fontSize: 16, fontWeight: '600' }}>
-                  Action Items
-                </Text>
-                {report.actionItems.map((item, idx) => (
-                  <Text key={idx} style={{ color: '#e2e8f0', fontSize: 14 }}>
-                    {'\u2022'} {item}
-                  </Text>
-                ))}
-              </View>
-            )}
-
-            {report.decisionsMade && report.decisionsMade.length > 0 && (
-              <View style={{ gap: 4 }}>
-                <Text style={{ color: '#f59e0b', fontSize: 16, fontWeight: '600' }}>
-                  Decisions Made
-                </Text>
-                {report.decisionsMade.map((decision, idx) => (
-                  <Text key={idx} style={{ color: '#e2e8f0', fontSize: 14 }}>
-                    {'\u2022'} {decision}
-                  </Text>
-                ))}
-              </View>
-            )}
-
-            {report.openQuestions && report.openQuestions.length > 0 && (
-              <View style={{ gap: 4 }}>
-                <Text style={{ color: '#f59e0b', fontSize: 16, fontWeight: '600' }}>
-                  Open Questions
-                </Text>
-                {report.openQuestions.map((question, idx) => (
-                  <Text key={idx} style={{ color: '#e2e8f0', fontSize: 14 }}>
-                    {'\u2022'} {question}
-                  </Text>
-                ))}
-              </View>
-            )}
+        {report.openQuestions && report.openQuestions.length > 0 && (
+          <View style={{ gap: 4 }}>
+            <Text style={{ color: '#d4a574', fontSize: 16, fontWeight: '600' }}>
+              Open Questions
+            </Text>
+            {report.openQuestions.map((question, idx) => (
+              <Text key={idx} style={{ color: '#f5f0eb', fontSize: 14 }}>
+                {'\u2022'} {question}
+              </Text>
+            ))}
+          </View>
+        )}
 
         <PrimaryButton label="New Meeting" onPress={resetMeeting} />
 
@@ -339,8 +340,8 @@ export function MeetingScreen({ navigation }: any) {
 
         {exporting ? (
           <View style={{ alignItems: 'center', gap: 8, paddingVertical: 12 }}>
-            <ActivityIndicator size="small" color="#f59e0b" />
-            <Text style={{ color: '#94a3b8', fontSize: 14 }}>Exporting...</Text>
+            <ActivityIndicator size="small" color="#d4a574" />
+            <Text style={{ color: '#8a7e72', fontSize: 14 }}>Exporting...</Text>
           </View>
         ) : (
           <>
@@ -365,20 +366,46 @@ export function MeetingScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   apiKeyBanner: {
-    backgroundColor: '#7c2d12',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255,71,87,0.1)',
+    borderRadius: 16,
     padding: 16,
     width: '100%',
     gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,71,87,0.2)',
   },
   apiKeyBannerText: {
-    color: '#fca5a5',
+    color: '#f5f0eb',
     fontSize: 14,
     fontWeight: '600',
   },
   apiKeyBannerLink: {
-    color: '#f59e0b',
+    color: '#d4a574',
     fontSize: 14,
     fontWeight: '700',
+  },
+  recordingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,71,87,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,71,87,0.2)',
+  },
+  recordingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#ff4757',
+  },
+  recordingLabel: {
+    color: '#ff4757',
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });

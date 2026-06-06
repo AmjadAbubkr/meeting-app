@@ -11,7 +11,7 @@ type Props = {
 export function PrimaryButton({ label, onPress, variant = 'primary', disabled = false }: Props) {
   return (
     <Pressable onPress={onPress} disabled={disabled} style={[styles.base, styles[variant], disabled && styles.disabled]}>
-      <Text style={[styles.text, disabled && styles.disabledText]}>{label}</Text>
+      <Text style={[styles.text, variant === 'ghost' && styles.ghostText, disabled && styles.disabledText]}>{label}</Text>
     </Pressable>
   );
 }
@@ -19,15 +19,16 @@ export function PrimaryButton({ label, onPress, variant = 'primary', disabled = 
 const styles = StyleSheet.create({
   base: {
     minHeight: 52,
-    borderRadius: 14,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
-  primary: { backgroundColor: '#d97706' },
-  danger: { backgroundColor: '#b91c1c' },
-  ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#334155' },
+  primary: { backgroundColor: '#d4a574' },
+  danger: { backgroundColor: '#ff4757' },
+  ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: 'rgba(212,165,116,0.35)' },
   disabled: { opacity: 0.5 },
-  text: { color: 'white', fontWeight: '700', fontSize: 16 },
-  disabledText: { color: '#64748b' },
+  text: { color: '#0f0f0f', fontWeight: '600', fontSize: 16 },
+  ghostText: { color: '#d4a574' },
+  disabledText: { color: '#8a7e72' },
 });
