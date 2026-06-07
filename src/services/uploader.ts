@@ -1,4 +1,4 @@
-import DocumentPicker, { isCancel } from 'react-native-document-picker';
+import { pick, types, isCancel } from '@react-native-documents/picker';
 import RNFS, { CachesDirectoryPath } from 'react-native-fs';
 import { CHUNK_SIZE_BYTES, SUPPORTED_AUDIO_FORMATS } from '../config';
 import { FFmpegKit, FFprobeKit, ReturnCode } from 'react-native-ffmpeg-kit';
@@ -16,8 +16,8 @@ export async function pickAndChunkAudio(
   onChunkComplete?: (uri: string, chunkIndex: number, totalChunks: number) => void,
 ): Promise<{ uri: string; chunkCount: number } | null> {
   try {
-    const [result] = await DocumentPicker.pick({
-      type: [DocumentPicker.types.audio],
+    const [result] = await pick({
+      type: [types.audio],
     });
 
     const fileUri = result.uri;
