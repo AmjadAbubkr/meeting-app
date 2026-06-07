@@ -1,8 +1,8 @@
 import { getApiKey } from './apiKeys';
 import type { Language, ReportData } from '../store/appStore';
 
-const GEMINI_PRIMARY_MODEL = 'gemini-2.0-flash';
-const GEMINI_FALLBACK_MODEL = 'gemini-1.5-flash-latest';
+const GEMINI_PRIMARY_MODEL = 'gemini-2.0-flash-001';
+const GEMINI_FALLBACK_MODEL = 'gemini-2.5-flash-preview-05-20';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 const REPORT_JSON_SCHEMA = {
