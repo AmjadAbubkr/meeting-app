@@ -64,7 +64,7 @@ jobs:
       # Build the APK. We restrict to arm64-v8a to build faster and use less disk space.
       - name: Build APK
         env:
-          KEYSTORE_FILE: android/app/release.keystore
+          KEYSTORE_PATH: release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -84,7 +84,7 @@ jobs:
       # Build the AAB. We also restrict to arm64-v8a to save disk space and build time.
       - name: Build AAB
         env:
-          KEYSTORE_FILE: android/app/release.keystore
+          KEYSTORE_PATH: release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
