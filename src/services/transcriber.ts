@@ -72,12 +72,6 @@ export async function transcribeChunks(
       const audioBytes = Uint8Array.from(atob(base64Audio), (c) => c.charCodeAt(0));
       const footerBytes = encoder.encode(epilogue);
 
-      // Convert to bytes for proper binary handling
-      const encoder = new TextEncoder();
-      const headerBytes = encoder.encode(headerStr);
-      const audioBytes = Uint8Array.from(atob(base64Audio), (c) => c.charCodeAt(0));
-      const footerBytes = encoder.encode(footerStr);
-
       // Combine into a single Uint8Array
       const totalLength = headerBytes.length + audioBytes.length + footerBytes.length;
       const bodyBytes = new Uint8Array(totalLength);
