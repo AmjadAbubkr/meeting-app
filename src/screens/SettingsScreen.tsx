@@ -23,7 +23,7 @@ import type { Language } from '../store/appStore';
 
 type EditingKey = 'groq' | 'gemini' | null;
 
-export function SettingsScreen({ navigation }: any) {
+export function SettingsScreen({ navigation, noSafeArea }: any) {
   const [defaultLanguage, setDefaultLanguage] = useState<Language>('EN');
   const [groqExists, setGroqExists] = useState(false);
   const [geminiExists, setGeminiExists] = useState(false);
@@ -210,7 +210,7 @@ export function SettingsScreen({ navigation }: any) {
   }, []);
 
   return (
-    <ScreenShell>
+    <ScreenShell noSafeArea={noSafeArea}>
       <ScrollView style={styles.container} contentContainerStyle={{ gap: 28, paddingBottom: 40 }}>
         <Text style={styles.title}>Settings</Text>
 

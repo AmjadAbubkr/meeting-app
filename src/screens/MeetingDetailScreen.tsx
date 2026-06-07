@@ -12,47 +12,14 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenShell } from '../components/ScreenShell';
 import { PrimaryButton } from '../components/PrimaryButton';
-import { deleteMeeting, getMeeting, updateMeeting, MeetingRecord } from '../db/database';
+import { deleteMeeting, getMeeting, updateMeeting, MeetingRecord, parseReports } from '../db/database';
 import { generateReport } from '../services/generator';
+import { getRenderableSections } from '../services/reportSections';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { ExportBottomSheet } from '../components/ExportBottomSheet';
-import type { Language, ReportData } from '../store/appStore';
+import type { Language } from '../store/appStore';
 
 type Tab = 'report' | 'transcript' | 'audio';
-
-type LangReport = {
-  report: ReportData;
-  summary: string[];
-};
-
-type ParsedReports = {
-  EN?: LangReport;
-  FR?: LangReport;
-};
-
-function parseReports(meeting: MeetingRecord): ParsedReports {
-  const result: ParsedReports = {};
-  if (!meeting.reports) return result;
-  try {
-    const parsed = JSON.parse(meeting.reports);
-    // parsed is { "EN": { report, summary }, "FR": { report, summary } }
-    if (parsed.EN) {
-      result.EN = {
-        report: parsed.EN.report ?? {},
-        summary: Array.isArray(parsed.EN.summary) ? parsed.EN.summary : [],
-      };
-    }
-    if (parsed.FR) {
-      result.FR = {
-        report: parsed.FR.report ?? {},
-        summary: Array.isArray(parsed.FR.summary) ? parsed.FR.summary : [],
-      };
-    }
-  } catch {
-    // Ignore parse errors
-  }
-  return result;
-}
 
 export function MeetingDetailScreen({ navigation, route }: any) {
   const meetingId: number = route.params.meetingId;
@@ -64,7 +31,6 @@ export function MeetingDetailScreen({ navigation, route }: any) {
   const [editedTitle, setEditedTitle] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
-  const [showRaw, setShowRaw] = useState(false);
   const [showExport, setShowExport] = useState(false);
 
   // Load meeting on focus
@@ -155,7 +121,6 @@ export function MeetingDetailScreen({ navigation, route }: any) {
 
       const updated = await updateMeeting(meeting.id, {
         reports: reportsJson,
-        cleanedTranscript: result.cleanedTranscript,
       });
       if (updated) {
         setMeeting(updated);
@@ -217,97 +182,33 @@ export function MeetingDetailScreen({ navigation, route }: any) {
         style={styles.tabContent}
         contentContainerStyle={{ gap: 12, paddingBottom: 24 }}
       >
-        {summary.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Summary</Text>
-            {summary.map((bullet: string, idx: number) => (
-              <Text key={idx} style={styles.bulletText}>
-                {'\u2022'} {bullet}
-              </Text>
-            ))}
+        {getRenderableSections(report, summary).map(({ section, value }) => (
+          <View key={section.key} style={styles.section}>
+            <Text
+              style={
+                section.key === 'summary' ? styles.sectionTitle : styles.sectionSubtitle
+              }
+            >
+              {section.title}
+            </Text>
+            {section.kind === 'bullets'
+              ? (value as string[]).map((v, idx) => (
+                  <Text key={idx} style={styles.bulletText}>
+                    {'\u2022'} {v}
+                  </Text>
+                ))
+              : <Text style={styles.bodyText}>{value as string}</Text>}
           </View>
-        )}
-
-        {report.overview && (
-          <View style={styles.section}>
-            <Text style={styles.sectionSubtitle}>Overview</Text>
-            <Text style={styles.bodyText}>{report.overview}</Text>
-          </View>
-        )}
-
-        {report.keyDiscussionPoints && report.keyDiscussionPoints.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionSubtitle}>Key Discussion Points</Text>
-            {report.keyDiscussionPoints.map((point: string, idx: number) => (
-              <Text key={idx} style={styles.bulletText}>
-                {'\u2022'} {point}
-              </Text>
-            ))}
-          </View>
-        )}
-
-        {report.actionItems && report.actionItems.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionSubtitle}>Action Items</Text>
-            {report.actionItems.map((item: string, idx: number) => (
-              <Text key={idx} style={styles.bulletText}>
-                {'\u2022'} {item}
-              </Text>
-            ))}
-          </View>
-        )}
-
-        {report.decisionsMade && report.decisionsMade.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionSubtitle}>Decisions Made</Text>
-            {report.decisionsMade.map((decision: string, idx: number) => (
-              <Text key={idx} style={styles.bulletText}>
-                {'\u2022'} {decision}
-              </Text>
-            ))}
-          </View>
-        )}
-
-        {report.openQuestions && report.openQuestions.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionSubtitle}>Open Questions</Text>
-            {report.openQuestions.map((question: string, idx: number) => (
-              <Text key={idx} style={styles.bulletText}>
-                {'\u2022'} {question}
-              </Text>
-            ))}
-          </View>
-        )}
+        ))}
       </ScrollView>
     );
   };
 
   const renderTranscriptTab = () => {
-    const transcriptText = showRaw
-      ? meeting?.rawTranscript
-      : meeting?.cleanedTranscript;
+    const transcriptText = meeting?.rawTranscript;
 
     return (
       <View style={styles.tabContent}>
-        <View style={styles.toggleRow}>
-          <Pressable
-            onPress={() => setShowRaw(false)}
-            style={[styles.toggleChip, !showRaw && styles.toggleChipActive]}
-          >
-            <Text style={[styles.toggleText, !showRaw && styles.toggleTextActive]}>
-              Cleaned
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setShowRaw(true)}
-            style={[styles.toggleChip, showRaw && styles.toggleChipActive]}
-          >
-            <Text style={[styles.toggleText, showRaw && styles.toggleTextActive]}>
-              Raw
-            </Text>
-          </Pressable>
-        </View>
-
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
           {transcriptText ? (
             <Text style={styles.transcriptText}>{transcriptText}</Text>
@@ -332,9 +233,16 @@ export function MeetingDetailScreen({ navigation, route }: any) {
       <View style={styles.outerContainer}>
         {/* Header */}
         <View style={styles.headerRow}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.headerBtn}>
-            <Text style={styles.backText}>{'< Back'}</Text>
-          </Pressable>
+      <Pressable
+        onPress={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          }
+        }}
+        style={styles.headerBtn}
+      >
+        <Text style={styles.backText}>{'< Back'}</Text>
+      </Pressable>
 
           <View style={styles.titleContainer}>
             {isEditingTitle ? (
@@ -567,28 +475,6 @@ const styles = StyleSheet.create({
     color: '#f5f0eb',
     fontSize: 14,
     lineHeight: 20,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-  toggleChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#1a1a1a',
-  },
-  toggleChipActive: {
-    backgroundColor: '#d4a574',
-  },
-  toggleText: {
-    color: '#8a7e72',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  toggleTextActive: {
-    color: '#0f0f0f',
   },
   transcriptText: {
     color: '#f5f0eb',

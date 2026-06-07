@@ -1,51 +1,36 @@
 import RNFS from 'react-native-fs';
-import { Share, Alert } from 'react-native';
+import { Share, Alert, PermissionsAndroid, Platform } from 'react-native';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import type { MeetingRecord } from '../db/database';
+import { parseReports, getReportForLanguage } from '../db/database';
+import { getRenderableSections } from './reportSections';
 import type { ReportData } from '../store/appStore';
-
-/** Parsed reports structure from the JSON column */
-type ParsedReports = {
-  EN?: { report: ReportData; summary: string[] };
-  FR?: { report: ReportData; summary: string[] };
-};
-
-/**
- * Parse the reports JSON string from a MeetingRecord.
- * Returns an object keyed by language code.
- */
-function parseReports(meeting: MeetingRecord): ParsedReports {
-  if (!meeting.reports) return {};
-  try {
-    return JSON.parse(meeting.reports) as ParsedReports;
-  } catch {
-    return {};
-  }
-}
-
-/**
- * Get report data for a specific language, falling back to EN, then any available.
- */
-function getReportForLanguage(
-  meeting: MeetingRecord,
-  language: 'EN' | 'FR',
-): { report: ReportData; summary: string[] } | null {
-  const parsed = parseReports(meeting);
-  const langData = parsed[language];
-  if (langData) return langData;
-  // Fallback to EN
-  if (parsed.EN) return parsed.EN;
-  // Fallback to FR
-  if (parsed.FR) return parsed.FR;
-  return null;
-}
 
 /**
  * Sanitize a string for use in filenames.
  * Removes path traversal characters and replaces non-alphanumeric chars with dashes.
  * Truncates to 50 characters max.
  */
+async function requestStoragePermission(): Promise<boolean> {
+  if (Platform.OS !== 'android') return true;
+  try {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      {
+        title: 'Storage Permission',
+        message: 'Meeting App needs storage access to save exported files.',
+        buttonNeutral: 'Ask Me Later',
+        buttonNegative: 'Cancel',
+        buttonPositive: 'OK',
+      },
+    );
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  } catch {
+    return true;
+  }
+}
+
 function sanitizeFilename(name: string): string {
   return name
     .replace(/[^a-zA-Z0-9]/g, '-') // Replace non-alphanumeric with dash
@@ -63,41 +48,15 @@ function buildReportHTML(
   report: ReportData,
   summary: string[],
 ): string {
-  const summarySection = summary.length > 0
-    ? `<h2>Summary</h2><ul>${summary.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul>`
-    : '';
-
-  const overviewSection = report.overview
-    ? `<h2>Overview</h2><p>${escapeHtml(report.overview)}</p>`
-    : '';
-
-  const keyDiscussionPointsSection =
-    report.keyDiscussionPoints && report.keyDiscussionPoints.length > 0
-      ? `<h2>Key Discussion Points</h2><ul>${report.keyDiscussionPoints
-          .map((p) => `<li>${escapeHtml(p)}</li>`)
-          .join('')}</ul>`
-      : '';
-
-  const actionItemsSection =
-    report.actionItems && report.actionItems.length > 0
-      ? `<h2>Action Items</h2><ul>${report.actionItems
-          .map((a) => `<li>${escapeHtml(a)}</li>`)
-          .join('')}</ul>`
-      : '';
-
-  const decisionsMadeSection =
-    report.decisionsMade && report.decisionsMade.length > 0
-      ? `<h2>Decisions Made</h2><ul>${report.decisionsMade
-          .map((d) => `<li>${escapeHtml(d)}</li>`)
-          .join('')}</ul>`
-      : '';
-
-  const openQuestionsSection =
-    report.openQuestions && report.openQuestions.length > 0
-      ? `<h2>Open Questions</h2><ul>${report.openQuestions
-          .map((q) => `<li>${escapeHtml(q)}</li>`)
-          .join('')}</ul>`
-      : '';
+  const sections = getRenderableSections(report, summary)
+    .map(({ section, value }) => {
+      const body =
+        section.kind === 'bullets'
+          ? `<ul>${(value as string[]).map((v) => `<li>${escapeHtml(v)}</li>`).join('')}</ul>`
+          : `<p>${escapeHtml(value as string)}</p>`;
+      return `<h2>${section.title}</h2>${body}`;
+    })
+    .join('');
 
   return `<html>
 <head><style>
@@ -112,12 +71,7 @@ p { line-height: 1.6; }
 <body>
 <h1>${escapeHtml(title)}</h1>
 <div class="meta">${escapeHtml(date)}</div>
-${summarySection}
-${overviewSection}
-${keyDiscussionPointsSection}
-${actionItemsSection}
-${decisionsMadeSection}
-${openQuestionsSection}
+${sections}
 </body>
 </html>`;
 }
@@ -150,49 +104,29 @@ function buildReportText(
   lines.push(date);
   lines.push('');
 
-  if (summary.length > 0) {
-    lines.push('SUMMARY');
-    lines.push('-'.repeat(7));
-    summary.forEach((s) => lines.push(`• ${s}`));
-    lines.push('');
-  }
-
-  if (report.overview) {
-    lines.push('OVERVIEW');
-    lines.push('-'.repeat(8));
-    lines.push(report.overview);
-    lines.push('');
-  }
-
-  if (report.keyDiscussionPoints && report.keyDiscussionPoints.length > 0) {
-    lines.push('KEY DISCUSSION POINTS');
-    lines.push('-'.repeat(20));
-    report.keyDiscussionPoints.forEach((p) => lines.push(`• ${p}`));
-    lines.push('');
-  }
-
-  if (report.actionItems && report.actionItems.length > 0) {
-    lines.push('ACTION ITEMS');
-    lines.push('-'.repeat(12));
-    report.actionItems.forEach((a) => lines.push(`• ${a}`));
-    lines.push('');
-  }
-
-  if (report.decisionsMade && report.decisionsMade.length > 0) {
-    lines.push('DECISIONS MADE');
-    lines.push('-'.repeat(14));
-    report.decisionsMade.forEach((d) => lines.push(`• ${d}`));
-    lines.push('');
-  }
-
-  if (report.openQuestions && report.openQuestions.length > 0) {
-    lines.push('OPEN QUESTIONS');
-    lines.push('-'.repeat(14));
-    report.openQuestions.forEach((q) => lines.push(`• ${q}`));
+  for (const { section, value } of getRenderableSections(report, summary)) {
+    const header = section.title.toUpperCase();
+    lines.push(header);
+    lines.push('-'.repeat(header.length));
+    if (section.kind === 'bullets') {
+      (value as string[]).forEach((v) => lines.push(`• ${v}`));
+    } else {
+      lines.push(value as string);
+    }
     lines.push('');
   }
 
   return lines.join('\n');
+}
+
+function bulletParagraph(text: string): Paragraph {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: '\u2022 ', bold: true }),
+      new TextRun({ text }),
+    ],
+    spacing: { after: 60 },
+  });
 }
 
 /**
@@ -215,6 +149,8 @@ export async function exportPDF(
     throw new Error('No report data to export');
   }
 
+  await requestStoragePermission();
+
   const { report, summary } = reportData;
   const htmlContent = buildReportHTML(meeting.title, meeting.date, report, summary);
 
@@ -226,13 +162,19 @@ export async function exportPDF(
     const options = {
       html: htmlContent,
       fileName,
-      directory: 'Downloads' as const, // Android 10+ scoped storage
+      directory: 'Documents' as const,
     };
 
     const result = await RNHTMLtoPDF.convert(options);
+
+    if (!result.filePath) {
+      throw new Error('PDF generator returned no file path.');
+    }
+
     return result.filePath;
   } catch (err) {
-    throw new Error('Failed to generate PDF');
+    const msg = err instanceof Error ? err.message : 'Failed to generate PDF';
+    throw new Error(msg);
   }
 }
 
@@ -256,12 +198,12 @@ export async function exportDOCX(
     throw new Error('No report data to export');
   }
 
+  await requestStoragePermission();
+
   const { report, summary } = reportData;
 
-  // Build document paragraphs
   const children: Paragraph[] = [];
 
-  // Title
   children.push(
     new Paragraph({
       text: meeting.title,
@@ -270,7 +212,6 @@ export async function exportDOCX(
     }),
   );
 
-  // Date
   children.push(
     new Paragraph({
       children: [
@@ -284,131 +225,24 @@ export async function exportDOCX(
     }),
   );
 
-  // Summary
-  if (summary.length > 0) {
+  for (const { section, value } of getRenderableSections(report, summary)) {
     children.push(
       new Paragraph({
-        text: 'Summary',
+        text: section.title,
         heading: HeadingLevel.HEADING_2,
         spacing: { before: 200, after: 100 },
       }),
     );
-    summary.forEach((bullet) => {
+    if (section.kind === 'bullets') {
+      (value as string[]).forEach((v) => children.push(bulletParagraph(v)));
+    } else {
       children.push(
         new Paragraph({
-          children: [
-            new TextRun({ text: '• ', bold: true }),
-            new TextRun({ text: bullet }),
-          ],
-          spacing: { after: 60 },
+          text: value as string,
+          spacing: { after: 120 },
         }),
       );
-    });
-  }
-
-  // Overview
-  if (report.overview) {
-    children.push(
-      new Paragraph({
-        text: 'Overview',
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 200, after: 100 },
-      }),
-    );
-    children.push(
-      new Paragraph({
-        text: report.overview,
-        spacing: { after: 120 },
-      }),
-    );
-  }
-
-  // Key Discussion Points
-  if (report.keyDiscussionPoints && report.keyDiscussionPoints.length > 0) {
-    children.push(
-      new Paragraph({
-        text: 'Key Discussion Points',
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 200, after: 100 },
-      }),
-    );
-    report.keyDiscussionPoints.forEach((point) => {
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: '• ', bold: true }),
-            new TextRun({ text: point }),
-          ],
-          spacing: { after: 60 },
-        }),
-      );
-    });
-  }
-
-  // Action Items
-  if (report.actionItems && report.actionItems.length > 0) {
-    children.push(
-      new Paragraph({
-        text: 'Action Items',
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 200, after: 100 },
-      }),
-    );
-    report.actionItems.forEach((item) => {
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: '• ', bold: true }),
-            new TextRun({ text: item }),
-          ],
-          spacing: { after: 60 },
-        }),
-      );
-    });
-  }
-
-  // Decisions Made
-  if (report.decisionsMade && report.decisionsMade.length > 0) {
-    children.push(
-      new Paragraph({
-        text: 'Decisions Made',
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 200, after: 100 },
-      }),
-    );
-    report.decisionsMade.forEach((decision) => {
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: '• ', bold: true }),
-            new TextRun({ text: decision }),
-          ],
-          spacing: { after: 60 },
-        }),
-      );
-    });
-  }
-
-  // Open Questions
-  if (report.openQuestions && report.openQuestions.length > 0) {
-    children.push(
-      new Paragraph({
-        text: 'Open Questions',
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 200, after: 100 },
-      }),
-    );
-    report.openQuestions.forEach((question) => {
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: '• ', bold: true }),
-            new TextRun({ text: question }),
-          ],
-          spacing: { after: 60 },
-        }),
-      );
-    });
+    }
   }
 
   const doc = new Document({
@@ -417,15 +251,33 @@ export async function exportDOCX(
 
   const safeTitle = sanitizeFilename(meeting.title);
   const safeDate = sanitizeFilename(meeting.date);
-  const filePath = `${RNFS.DownloadDirectoryPath}/Meeting-${safeTitle}-${safeDate}.docx`;
+
+  const outputPath = `${RNFS.DocumentDirectoryPath}/Meeting-${safeTitle}-${safeDate}.docx`;
 
   try {
     const buffer = await Packer.toBuffer(doc);
-    const base64 = buffer.toString('base64');
-    await RNFS.writeFile(filePath, base64, 'base64');
-    return filePath;
+    let base64: string;
+
+    if (typeof buffer === 'string') {
+      base64 = buffer;
+    } else if (buffer instanceof Uint8Array || Array.isArray(buffer)) {
+      let binary = '';
+      const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      base64 = btoa(binary);
+    } else if (typeof (buffer as any).toString === 'function') {
+      base64 = (buffer as any).toString('base64');
+    } else {
+      throw new Error('Unexpected buffer type from Packer.toBuffer');
+    }
+
+    await RNFS.writeFile(outputPath, base64, 'base64');
+    return outputPath;
   } catch (err) {
-    throw new Error('Failed to save file');
+    const msg = err instanceof Error ? err.message : 'Failed to save DOCX file';
+    throw new Error(msg);
   }
 }
 

@@ -32,7 +32,6 @@ type GeminiResponse = {
 };
 
 type GenerateResult = {
-  cleanedTranscript: string;
   report: ReportData;
   summary: string[];
 };
@@ -169,13 +168,7 @@ Return valid JSON matching the provided schema.`;
     throw new Error('Gemini response is missing required report or summary fields.');
   }
 
-  // Build the cleaned transcript — we return the original transcript as cleanedTranscript
-  // since Gemini's structured output focuses on the report, not a separate cleaned version.
-  // The "cleaning" is implicit in the report generation.
-  const cleanedTranscript = rawTranscript;
-
   return {
-    cleanedTranscript,
     report: parsed.report,
     summary: parsed.summary,
   };

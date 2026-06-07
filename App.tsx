@@ -49,13 +49,23 @@ function MainScreen({ navigation }: any) {
     setActiveTab(screen);
   };
 
+  // Handle hardware back button — don't let it pop the root screen
+  useEffect(() => {
+    const subscription = navigation.addListener('beforeRemove', (e: any) => {
+      if (navigation.getState().index === 0) {
+        e.preventDefault();
+      }
+    });
+    return subscription;
+  }, [navigation]);
+
   return (
     <View style={styles.mainContainer}>
       <TopNavBar active={activeTab} onNavigate={handleNavigate} />
       <View style={styles.screenContainer}>
-        {activeTab === 'Meeting' && <MeetingScreen navigation={navigation} />}
-        {activeTab === 'History' && <HistoryScreen navigation={navigation} />}
-        {activeTab === 'Settings' && <SettingsScreen navigation={navigation} />}
+      {activeTab === 'Meeting' && <MeetingScreen navigation={navigation} noSafeArea />}
+      {activeTab === 'History' && <HistoryScreen navigation={navigation} noSafeArea />}
+      {activeTab === 'Settings' && <SettingsScreen navigation={navigation} noSafeArea />}
       </View>
     </View>
   );
@@ -79,11 +89,12 @@ export default function App() {
 
       const passcodeExists = await hasPasscode();
 
-      if (!passcodeExists) {
+      if (passcodeExists) {
         setInitialRoute('Passcode');
         setIsReady(true);
         return;
       }
+      // No passcode set — go straight to API key check, then Main
 
       const hasGroq = await hasApiKey('groq');
       const hasGemini = await hasApiKey('gemini');

@@ -1,4 +1,4 @@
-import { pick, types, isCancel } from '@react-native-documents/picker';
+import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import RNFS, { CachesDirectoryPath } from 'react-native-fs';
 import { CHUNK_SIZE_BYTES, SUPPORTED_AUDIO_FORMATS } from '../config';
 import { FFmpegKit, FFprobeKit, ReturnCode } from 'react-native-ffmpeg-kit';
@@ -72,7 +72,7 @@ export async function pickAndChunkAudio(
 
     return chunkExistingFile(fileUri, onChunkComplete);
   } catch (err) {
-    if (isCancel(err)) {
+    if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
       return null;
     }
     throw err;
