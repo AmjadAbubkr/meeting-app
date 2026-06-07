@@ -42,7 +42,7 @@ type State = {
   setChunkState: (chunkCount: number, currentChunkIndex: number) => void;
   handleRecordingChunk: (uri: string, index: number) => void;
   handleUploadChunk: (uri: string, chunkIndex: number, totalChunks: number) => void;
-  setError: (error: string) => void;
+  setError: (error: string, stepIndex?: number) => void;
   clearError: () => void;
   resetMeeting: () => void;
 };
@@ -101,11 +101,11 @@ export const useAppStore = create<State>((set) => ({
     currentChunkIndex: chunkIndex,
     processingStep: `Chunking audio ${chunkIndex + 1}/${totalChunks}...`,
   })),
-  setError: (error: string) =>
-    set((state) => ({
+  setError: (error: string, stepIndex: number | null = null) =>
+    set({
       error,
-      failedStepIndex: state.processingStepIndex,
-    })),
+      failedStepIndex: stepIndex,
+    }),
   clearError: () => set({ error: null, failedStepIndex: null }),
   resetMeeting: () => set(initial),
 }));

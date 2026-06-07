@@ -316,8 +316,21 @@ export async function moveAudioToPermanentStorage(
     }
   }
 
-  // Return path to the first audio file, not the directory
-  return firstFilePath ?? meetingDir;
+  if (!firstFilePath) {
+    // No files were moved — scan the destination directory for any existing audio file
+    const existingFiles = await RNFS.readDir(meetingDir).catch(() => []);
+    const audioFile = existingFiles
+      .filter((f) => f.isFile() && f.name.endsWith('.m4a'))
+      .sort((a, b) => a.name.localeCompare(b.name))[0];
+
+    if (!audioFile) {
+      throw new Error(`No audio files found for meeting in ${meetingDir}`);
+    }
+
+    return audioFile.path;
+  }
+
+  return firstFilePath;
 }
 
 /**

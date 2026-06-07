@@ -43,6 +43,7 @@ export function AudioPlayer({ audioPath }: Props) {
         if (e.isFinished) {
           setIsPlaying(false);
           setCurrentPosition(0);
+          hasStartedRef.current = false;
         }
       });
       listenerAttachedRef.current = true;

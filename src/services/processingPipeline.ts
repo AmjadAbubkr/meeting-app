@@ -62,6 +62,7 @@ export function useProcessingPipeline() {
     clearError();
     setProcessingStepIndex(0);
 
+    let currentStepIndex = 0;
     try {
       // Step 0: Transcribe
       setProcessingStep(STEP_LABELS[0]);
@@ -72,12 +73,14 @@ export function useProcessingPipeline() {
       setTranscriptFromApi(transcript);
 
       // Step 1: Generate report
+      currentStepIndex = 1;
       setProcessingStep(STEP_LABELS[1]);
       setProcessingStepIndex(1);
       const result = await generateReport(transcript, currentLanguage);
       setResults(result.report, result.summary, result.cleanedTranscript);
 
       // Step 2: Save to database
+      currentStepIndex = 2;
       setProcessingStep(STEP_LABELS[2]);
       setProcessingStepIndex(2);
 
@@ -283,8 +286,8 @@ export function useProcessingPipeline() {
       setAppState('RESULTS');
       setProcessingStep('');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save transcript.';
-      setError(message);
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setError(message, currentStepIndex);
     }
   }, [
     rawTranscript,
