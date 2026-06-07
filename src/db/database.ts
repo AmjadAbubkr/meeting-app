@@ -302,6 +302,7 @@ export async function moveAudioToPermanentStorage(
   }
 
   // Move each chunk file to the permanent directory
+  let firstFilePath: string | null = null;
   for (const chunkPath of chunkPaths) {
     const fileName = chunkPath.split('/').pop() || `chunk-${Date.now()}.m4a`;
     const destPath = `${meetingDir}/${fileName}`;
@@ -309,10 +310,14 @@ export async function moveAudioToPermanentStorage(
     const sourceExists = await RNFS.exists(chunkPath);
     if (sourceExists) {
       await RNFS.moveFile(chunkPath, destPath);
+      if (firstFilePath === null) {
+        firstFilePath = destPath;
+      }
     }
   }
 
-  return meetingDir;
+  // Return path to the first audio file, not the directory
+  return firstFilePath ?? meetingDir;
 }
 
 /**
