@@ -68,8 +68,9 @@ function getSubtitle(meeting: MeetingRecord): string {
       // Ignore parse errors
     }
   }
-  if (meeting.cleanedTranscript) {
-    const text = meeting.cleanedTranscript.trim();
+  if (meeting.rawTranscript) {
+    const text = meeting.rawTranscript.trim();
+    if (text === '') return 'No report yet';
     return text.length > 80 ? text.substring(0, 80) + '...' : text;
   }
   return 'No report yet';
@@ -89,7 +90,7 @@ function formatDate(dateStr: string): string {
   }
 }
 
-export function HistoryScreen({ navigation }: any) {
+export function HistoryScreen({ navigation, noSafeArea }: any) {
   const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
   const [searchText, setSearchText] = useState('');
 
@@ -111,7 +112,7 @@ export function HistoryScreen({ navigation }: any) {
   );
 
   return (
-    <ScreenShell>
+    <ScreenShell noSafeArea={noSafeArea}>
       <View style={styles.container}>
         <Text style={styles.headerTitle}>History</Text>
 

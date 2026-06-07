@@ -18,7 +18,6 @@ type State = {
   meetingDate: string;
   audioChunks: string[];
   rawTranscript: string;
-  cleanedTranscript: string;
   currentLanguage: Language;
   report: ReportData;
   summary: string[];
@@ -35,14 +34,14 @@ type State = {
   addAudioChunk: (uri: string) => void;
   setTranscript: (rawTranscript: string) => void;
   setTranscriptFromApi: (rawTranscript: string) => void;
-  setResults: (report: ReportData, summary: string[], cleanedTranscript: string) => void;
+  setResults: (report: ReportData, summary: string[]) => void;
   setProcessingStep: (processingStep: string) => void;
   setProcessingStepIndex: (index: number) => void;
   setLanguage: (currentLanguage: Language) => void;
   setChunkState: (chunkCount: number, currentChunkIndex: number) => void;
   handleRecordingChunk: (uri: string, index: number) => void;
   handleUploadChunk: (uri: string, chunkIndex: number, totalChunks: number) => void;
-  setError: (error: string, stepIndex?: number) => void;
+  setError: (error: string, stepIndex: number) => void;
   clearError: () => void;
   resetMeeting: () => void;
 };
@@ -54,7 +53,6 @@ const initial = {
   meetingDate: '',
   audioChunks: [] as string[],
   rawTranscript: '',
-  cleanedTranscript: '',
   currentLanguage: 'EN' as Language,
   report: {} as ReportData,
   summary: [] as string[],
@@ -81,8 +79,7 @@ export const useAppStore = create<State>((set) => ({
   setTranscript: (rawTranscript) => set({ rawTranscript }),
   setTranscriptFromApi: (rawTranscript) =>
     set({ rawTranscript, processingStepIndex: 1 }),
-  setResults: (report, summary, cleanedTranscript) =>
-    set({ report, summary, cleanedTranscript, processingStepIndex: 2 }),
+  setResults: (report, summary) => set({ report, summary, processingStepIndex: 2 }),
   setProcessingStep: (processingStep) => set({ processingStep }),
   setProcessingStepIndex: (index) => set({ processingStepIndex: index }),
   setLanguage: (currentLanguage) => set({ currentLanguage }),
@@ -101,11 +98,7 @@ export const useAppStore = create<State>((set) => ({
     currentChunkIndex: chunkIndex,
     processingStep: `Chunking audio ${chunkIndex + 1}/${totalChunks}...`,
   })),
-  setError: (error: string, stepIndex: number | null = null) =>
-    set({
-      error,
-      failedStepIndex: stepIndex,
-    }),
+  setError: (error, stepIndex) => set({ error, failedStepIndex: stepIndex }),
   clearError: () => set({ error: null, failedStepIndex: null }),
   resetMeeting: () => set(initial),
 }));

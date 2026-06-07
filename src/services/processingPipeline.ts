@@ -24,6 +24,57 @@ function buildReportsJson(
   return JSON.stringify(reports);
 }
 
+type CommitInput = {
+  transcript: string;
+  report?: Record<string, any>;
+  summary?: string[];
+};
+
+async function finalizeMeeting(meetingId: number): Promise<void> {
+  const { meetingTitle, meetingDate, audioChunks } = useAppStore.getState();
+
+  try {
+    const permanentPath = await moveAudioToPermanentStorage(meetingId, audioChunks);
+    await updateMeeting(meetingId, { audioPath: permanentPath });
+  } catch {
+    // Don't fail the pipeline if audio move fails — the meeting is still saved
+  }
+
+  useAppStore.getState().setMeeting({
+    id: meetingId,
+    title: meetingTitle,
+    date: meetingDate,
+  });
+}
+
+async function commitMeeting(input: CommitInput): Promise<number> {
+  const { currentLanguage, meetingTitle, meetingDate } = useAppStore.getState();
+  const { setAppState, setProcessingStep, setProcessingStepIndex } = useAppStore.getState();
+
+  setProcessingStep(STEP_LABELS[2]);
+  setProcessingStepIndex(2);
+
+  const reportsJson =
+    input.report !== undefined
+      ? buildReportsJson(currentLanguage, input.report, input.summary ?? [])
+      : undefined;
+
+  const meetingId = await saveMeeting({
+    title: meetingTitle,
+    date: meetingDate,
+    rawTranscript: input.transcript,
+    createdAt: new Date().toISOString(),
+    ...(reportsJson !== undefined ? { reports: reportsJson } : {}),
+  });
+
+  await finalizeMeeting(meetingId);
+
+  setAppState('RESULTS');
+  setProcessingStep('');
+
+  return meetingId;
+}
+
 /**
  * Hook that orchestrates the full processing pipeline:
  * 1. Transcribe audio chunks via Groq Whisper
@@ -34,18 +85,10 @@ function buildReportsJson(
  * On failure at any step: sets error state with step-level retry info.
  */
 export function useProcessingPipeline() {
-  const appState = useAppStore((s) => s.appState);
-  const audioChunks = useAppStore((s) => s.audioChunks);
-  const currentLanguage = useAppStore((s) => s.currentLanguage);
-  const meetingTitle = useAppStore((s) => s.meetingTitle);
-  const meetingDate = useAppStore((s) => s.meetingDate);
-  const rawTranscript = useAppStore((s) => s.rawTranscript);
-  const report = useAppStore((s) => s.report);
-  const summary = useAppStore((s) => s.summary);
-  const cleanedTranscript = useAppStore((s) => s.cleanedTranscript);
   const processingStepIndex = useAppStore((s) => s.processingStepIndex);
   const error = useAppStore((s) => s.error);
   const failedStepIndex = useAppStore((s) => s.failedStepIndex);
+  const rawTranscript = useAppStore((s) => s.rawTranscript);
 
   const setAppState = useAppStore((s) => s.setAppState);
   const setProcessingStep = useAppStore((s) => s.setProcessingStep);
@@ -55,16 +98,14 @@ export function useProcessingPipeline() {
   const setError = useAppStore((s) => s.setError);
   const clearError = useAppStore((s) => s.clearError);
 
-  /**
-   * Run the full pipeline from the beginning (transcribe → generate → save).
-   */
   const runFullPipeline = useCallback(async () => {
     clearError();
     setProcessingStepIndex(0);
 
+    const { audioChunks, currentLanguage } = useAppStore.getState();
+
     let currentStepIndex = 0;
     try {
-      // Step 0: Transcribe
       setProcessingStep(STEP_LABELS[0]);
       const langCode = currentLanguage === 'EN' ? 'en' : 'fr';
       const transcript = await transcribeChunks(audioChunks, langCode, (current, total) => {
@@ -72,57 +113,23 @@ export function useProcessingPipeline() {
       });
       setTranscriptFromApi(transcript);
 
-      // Step 1: Generate report
       currentStepIndex = 1;
       setProcessingStep(STEP_LABELS[1]);
       setProcessingStepIndex(1);
       const result = await generateReport(transcript, currentLanguage);
-      setResults(result.report, result.summary, result.cleanedTranscript);
+      setResults(result.report, result.summary);
 
-      // Step 2: Save to database
       currentStepIndex = 2;
-      setProcessingStep(STEP_LABELS[2]);
-      setProcessingStepIndex(2);
-
-      const reportsJson = buildReportsJson(currentLanguage, result.report, result.summary);
-
-      const meetingId = await saveMeeting({
-        title: meetingTitle,
-        date: meetingDate,
-        rawTranscript: transcript,
-        cleanedTranscript: result.cleanedTranscript,
-        reports: reportsJson,
-        createdAt: new Date().toISOString(),
+      await commitMeeting({
+        transcript,
+        report: result.report,
+        summary: result.summary,
       });
-
-      // Move audio chunk files to permanent storage
-      try {
-        const permanentPath = await moveAudioToPermanentStorage(meetingId, audioChunks);
-        await updateMeeting(meetingId, { audioPath: permanentPath });
-      } catch {
-        // Don't fail the pipeline if audio move fails — the meeting is still saved
-      }
-
-      // Update the meeting ID in the store
-      useAppStore.getState().setMeeting({
-        id: meetingId,
-        title: meetingTitle,
-        date: meetingDate,
-      });
-
-      // Auto-advance to RESULTS
-      setAppState('RESULTS');
-      setProcessingStep('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
-      setError(message);
+      setError(message, currentStepIndex);
     }
   }, [
-    audioChunks,
-    currentLanguage,
-    meetingTitle,
-    meetingDate,
-    setAppState,
     setProcessingStep,
     setProcessingStepIndex,
     setTranscriptFromApi,
@@ -131,175 +138,69 @@ export function useProcessingPipeline() {
     clearError,
   ]);
 
-  /**
-   * Retry from the failed step (not from the beginning).
-   * If transcription failed, retry from step 0.
-   * If report generation failed, retry from step 1 (using existing transcript).
-   * If save failed, retry from step 2 (using existing report).
-   */
   const retryFromFailedStep = useCallback(async () => {
-    if (failedStepIndex === null) {
-      // No failed step — run from beginning
+    const { failedStepIndex: failedIndex } = useAppStore.getState();
+
+    if (failedIndex === null) {
       return runFullPipeline();
     }
 
     clearError();
 
     try {
-      if (failedStepIndex === 0) {
-        // Retry transcription from scratch
+      if (failedIndex === 0) {
         return runFullPipeline();
       }
 
-      if (failedStepIndex === 1) {
-        // Retry report generation with existing transcript
+      if (failedIndex === 1) {
+        const { rawTranscript: transcript, currentLanguage } = useAppStore.getState();
         setProcessingStep(STEP_LABELS[1]);
         setProcessingStepIndex(1);
 
-        const result = await generateReport(rawTranscript, currentLanguage);
-        setResults(result.report, result.summary, result.cleanedTranscript);
+        const result = await generateReport(transcript, currentLanguage);
+        setResults(result.report, result.summary);
 
-        // Continue to save
-        setProcessingStep(STEP_LABELS[2]);
-        setProcessingStepIndex(2);
-
-        const reportsJson = buildReportsJson(currentLanguage, result.report, result.summary);
-
-        const meetingId = await saveMeeting({
-          title: meetingTitle,
-          date: meetingDate,
-          rawTranscript,
-          cleanedTranscript: result.cleanedTranscript,
-          reports: reportsJson,
-          createdAt: new Date().toISOString(),
+        await commitMeeting({
+          transcript,
+          report: result.report,
+          summary: result.summary,
         });
-
-        // Move audio to permanent storage
-        try {
-          const permanentPath = await moveAudioToPermanentStorage(meetingId, audioChunks);
-          await updateMeeting(meetingId, { audioPath: permanentPath });
-        } catch {
-          // Don't fail the pipeline if audio move fails
-        }
-
-        useAppStore.getState().setMeeting({
-          id: meetingId,
-          title: meetingTitle,
-          date: meetingDate,
-        });
-
-        setAppState('RESULTS');
-        setProcessingStep('');
         return;
       }
 
-      if (failedStepIndex === 2) {
-        // Retry save with existing results
-        setProcessingStep(STEP_LABELS[2]);
-        setProcessingStepIndex(2);
-
-        const reportsJson = buildReportsJson(currentLanguage, report, summary);
-
-        const meetingId = await saveMeeting({
-          title: meetingTitle,
-          date: meetingDate,
-          rawTranscript,
-          cleanedTranscript,
-          reports: reportsJson,
-          createdAt: new Date().toISOString(),
+      if (failedIndex === 2) {
+        const { rawTranscript: transcript, report, summary } = useAppStore.getState();
+        await commitMeeting({
+          transcript,
+          report,
+          summary,
         });
-
-        // Move audio to permanent storage
-        try {
-          const permanentPath = await moveAudioToPermanentStorage(meetingId, audioChunks);
-          await updateMeeting(meetingId, { audioPath: permanentPath });
-        } catch {
-          // Don't fail the pipeline if audio move fails
-        }
-
-        useAppStore.getState().setMeeting({
-          id: meetingId,
-          title: meetingTitle,
-          date: meetingDate,
-        });
-
-        setAppState('RESULTS');
-        setProcessingStep('');
         return;
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
-      setError(message);
+      setError(message, failedIndex);
     }
   }, [
-    failedStepIndex,
     runFullPipeline,
-    rawTranscript,
-    cleanedTranscript,
-    report,
-    summary,
-    currentLanguage,
-    meetingTitle,
-    meetingDate,
-    audioChunks,
     setProcessingStep,
     setProcessingStepIndex,
     setResults,
-    setAppState,
     setError,
     clearError,
   ]);
 
-  /**
-   * Keep transcript only — saves what we have without a report.
-   * Used when report generation fails and user wants to salvage the transcript.
-   */
   const keepTranscriptOnly = useCallback(async () => {
     clearError();
 
     try {
-      setProcessingStep(STEP_LABELS[2]);
-      setProcessingStepIndex(2);
-
-      const meetingId = await saveMeeting({
-        title: meetingTitle,
-        date: meetingDate,
-        rawTranscript,
-        cleanedTranscript: rawTranscript,
-        createdAt: new Date().toISOString(),
-      });
-
-      // Move audio to permanent storage
-      try {
-        const permanentPath = await moveAudioToPermanentStorage(meetingId, audioChunks);
-        await updateMeeting(meetingId, { audioPath: permanentPath });
-      } catch {
-        // Don't fail if audio move fails
-      }
-
-      useAppStore.getState().setMeeting({
-        id: meetingId,
-        title: meetingTitle,
-        date: meetingDate,
-      });
-
-      setAppState('RESULTS');
-      setProcessingStep('');
+      const { rawTranscript: transcript } = useAppStore.getState();
+      await commitMeeting({ transcript });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
-      setError(message, currentStepIndex);
+      setError(message, 2);
     }
-  }, [
-    rawTranscript,
-    audioChunks,
-    meetingTitle,
-    meetingDate,
-    setProcessingStep,
-    setProcessingStepIndex,
-    setAppState,
-    setError,
-    clearError,
-  ]);
+  }, [setError, clearError]);
 
   return {
     runFullPipeline,

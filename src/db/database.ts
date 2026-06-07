@@ -1,5 +1,6 @@
 import { open, type DB, type Scalar } from '@op-engineering/op-sqlite';
 import RNFS, { CachesDirectoryPath, DocumentDirectoryPath } from 'react-native-fs';
+import type { ReportData } from '../store/appStore';
 
 export type MeetingRecord = {
   id: number;
@@ -453,4 +454,53 @@ function rowToMeetingRecord(
     audioPath: (row.audioPath as string) || undefined,
     createdAt: (row.createdAt as string) || undefined,
   };
+}
+
+export type LangReport = {
+  report: ReportData;
+  summary: string[];
+};
+
+export type ParsedReports = {
+  EN?: LangReport;
+  FR?: LangReport;
+};
+
+export function parseReports(meeting: MeetingRecord): ParsedReports {
+  const result: ParsedReports = {};
+  if (!meeting.reports) return result;
+  try {
+    const parsed = JSON.parse(meeting.reports);
+    if (parsed.EN) {
+      result.EN = {
+        report: parsed.EN.report ?? {},
+        summary: Array.isArray(parsed.EN.summary)
+          ? parsed.EN.summary.map((s: unknown) => String(s)).filter((s: string) => s.length > 0)
+          : [],
+      };
+    }
+    if (parsed.FR) {
+      result.FR = {
+        report: parsed.FR.report ?? {},
+        summary: Array.isArray(parsed.FR.summary)
+          ? parsed.FR.summary.map((s: unknown) => String(s)).filter((s: string) => s.length > 0)
+          : [],
+      };
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return result;
+}
+
+export function getReportForLanguage(
+  meeting: MeetingRecord,
+  language: 'EN' | 'FR',
+): LangReport | null {
+  const parsed = parseReports(meeting);
+  const langData = parsed[language];
+  if (langData) return langData;
+  if (parsed.EN) return parsed.EN;
+  if (parsed.FR) return parsed.FR;
+  return null;
 }

@@ -1,12 +1,31 @@
 import React from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = {
   children: React.ReactNode;
   noPadding?: boolean;
+  noSafeArea?: boolean;
 };
 
-export function ScreenShell({ children, noPadding }: Props) {
+export function ScreenShell({ children, noPadding, noSafeArea }: Props) {
+  const insets = useSafeAreaInsets();
+
+  if (noSafeArea) {
+    return (
+      <View
+        style={[
+          styles.container,
+          noPadding && styles.noPadding,
+          { paddingTop: 0, paddingBottom: insets.bottom },
+        ]}
+      >
+        <StatusBar barStyle="light-content" />
+        {children}
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" />

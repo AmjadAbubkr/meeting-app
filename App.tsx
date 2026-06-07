@@ -49,13 +49,23 @@ function MainScreen({ navigation }: any) {
     setActiveTab(screen);
   };
 
+  // Handle hardware back button — don't let it pop the root screen
+  useEffect(() => {
+    const subscription = navigation.addListener('beforeRemove', (e: any) => {
+      if (navigation.getState().index === 0) {
+        e.preventDefault();
+      }
+    });
+    return subscription;
+  }, [navigation]);
+
   return (
     <View style={styles.mainContainer}>
       <TopNavBar active={activeTab} onNavigate={handleNavigate} />
       <View style={styles.screenContainer}>
-        {activeTab === 'Meeting' && <MeetingScreen navigation={navigation} />}
-        {activeTab === 'History' && <HistoryScreen navigation={navigation} />}
-        {activeTab === 'Settings' && <SettingsScreen navigation={navigation} />}
+      {activeTab === 'Meeting' && <MeetingScreen navigation={navigation} noSafeArea />}
+      {activeTab === 'History' && <HistoryScreen navigation={navigation} noSafeArea />}
+      {activeTab === 'Settings' && <SettingsScreen navigation={navigation} noSafeArea />}
       </View>
     </View>
   );
@@ -75,26 +85,31 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      await initDB();
+      try {
+        await initDB();
 
-      const passcodeExists = await hasPasscode();
+        const passcodeExists = await hasPasscode();
 
-      if (!passcodeExists) {
-        setInitialRoute('Passcode');
-        setIsReady(true);
-        return;
-      }
+        if (passcodeExists) {
+          setInitialRoute('Passcode');
+          return;
+        }
+        // No passcode set — go straight to API key check, then Main
 
-      const hasGroq = await hasApiKey('groq');
-      const hasGemini = await hasApiKey('gemini');
+        const hasGroq = await hasApiKey('groq');
+        const hasGemini = await hasApiKey('gemini');
 
-      if (!hasGroq || !hasGemini) {
+        if (!hasGroq || !hasGemini) {
+          setInitialRoute('ApiKeySetup');
+        } else {
+          setInitialRoute('Main');
+        }
+      } catch (e) {
+        console.warn('[App] startup init failed:', e);
         setInitialRoute('ApiKeySetup');
-      } else {
-        setInitialRoute('Main');
+      } finally {
+        setIsReady(true);
       }
-
-      setIsReady(true);
     })();
   }, []);
 
