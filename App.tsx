@@ -85,27 +85,31 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      await initDB();
+      try {
+        await initDB();
 
-      const passcodeExists = await hasPasscode();
+        const passcodeExists = await hasPasscode();
 
-      if (passcodeExists) {
-        setInitialRoute('Passcode');
-        setIsReady(true);
-        return;
-      }
-      // No passcode set — go straight to API key check, then Main
+        if (passcodeExists) {
+          setInitialRoute('Passcode');
+          return;
+        }
+        // No passcode set — go straight to API key check, then Main
 
-      const hasGroq = await hasApiKey('groq');
-      const hasGemini = await hasApiKey('gemini');
+        const hasGroq = await hasApiKey('groq');
+        const hasGemini = await hasApiKey('gemini');
 
-      if (!hasGroq || !hasGemini) {
+        if (!hasGroq || !hasGemini) {
+          setInitialRoute('ApiKeySetup');
+        } else {
+          setInitialRoute('Main');
+        }
+      } catch (e) {
+        console.warn('[App] startup init failed:', e);
         setInitialRoute('ApiKeySetup');
-      } else {
-        setInitialRoute('Main');
+      } finally {
+        setIsReady(true);
       }
-
-      setIsReady(true);
     })();
   }, []);
 

@@ -70,6 +70,7 @@ function getSubtitle(meeting: MeetingRecord): string {
   }
   if (meeting.rawTranscript) {
     const text = meeting.rawTranscript.trim();
+    if (text === '') return 'No report yet';
     return text.length > 80 ? text.substring(0, 80) + '...' : text;
   }
   return 'No report yet';

@@ -119,6 +119,7 @@ export async function transcribeChunks(
   const langCode = language.toLowerCase();
   const total = audioChunks.length;
 
+  let completed = 0;
   const results = await mapWithConcurrency(audioChunks, 3, async (chunkPath, index) => {
     try {
       const text = await transcribeChunk(chunkPath, langCode, apiKey);
@@ -128,7 +129,8 @@ export async function transcribeChunks(
       console.warn(`[transcribe] chunk ${index} skipped:`, e);
       return { index, text: '' };
     } finally {
-      onProgress?.(index + 1, total);
+      completed += 1;
+      onProgress?.(completed, total);
     }
   });
 

@@ -13,7 +13,13 @@ export function ScreenShell({ children, noPadding, noSafeArea }: Props) {
 
   if (noSafeArea) {
     return (
-      <View style={[styles.container, noPadding && styles.noPadding, { paddingTop: 0 }]}>
+      <View
+        style={[
+          styles.container,
+          noPadding && styles.noPadding,
+          { paddingTop: 0, paddingBottom: insets.bottom },
+        ]}
+      >
         <StatusBar barStyle="light-content" />
         {children}
       </View>

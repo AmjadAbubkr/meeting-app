@@ -474,13 +474,17 @@ export function parseReports(meeting: MeetingRecord): ParsedReports {
     if (parsed.EN) {
       result.EN = {
         report: parsed.EN.report ?? {},
-        summary: Array.isArray(parsed.EN.summary) ? parsed.EN.summary : [],
+        summary: Array.isArray(parsed.EN.summary)
+          ? parsed.EN.summary.map((s: unknown) => String(s)).filter((s: string) => s.length > 0)
+          : [],
       };
     }
     if (parsed.FR) {
       result.FR = {
         report: parsed.FR.report ?? {},
-        summary: Array.isArray(parsed.FR.summary) ? parsed.FR.summary : [],
+        summary: Array.isArray(parsed.FR.summary)
+          ? parsed.FR.summary.map((s: unknown) => String(s)).filter((s: string) => s.length > 0)
+          : [],
       };
     }
   } catch {

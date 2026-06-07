@@ -28,7 +28,10 @@ export const REPORT_SECTIONS: readonly SectionDescriptor[] = [
     key: 'overview',
     title: 'Overview',
     kind: 'paragraph',
-    read: (r) => r.overview ?? null,
+    read: (r) => {
+      const trimmed = r.overview?.trim();
+      return trimmed ? trimmed : null;
+    },
   },
   {
     key: 'keyDiscussionPoints',

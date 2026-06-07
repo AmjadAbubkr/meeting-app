@@ -27,7 +27,7 @@ async function requestStoragePermission(): Promise<boolean> {
     );
     return granted === PermissionsAndroid.RESULTS.GRANTED;
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -149,7 +149,10 @@ export async function exportPDF(
     throw new Error('No report data to export');
   }
 
-  await requestStoragePermission();
+  const granted = await requestStoragePermission();
+  if (!granted) {
+    throw new Error('Storage permission denied — cannot export PDF.');
+  }
 
   const { report, summary } = reportData;
   const htmlContent = buildReportHTML(meeting.title, meeting.date, report, summary);
@@ -198,7 +201,10 @@ export async function exportDOCX(
     throw new Error('No report data to export');
   }
 
-  await requestStoragePermission();
+  const granted = await requestStoragePermission();
+  if (!granted) {
+    throw new Error('Storage permission denied — cannot export DOCX.');
+  }
 
   const { report, summary } = reportData;
 

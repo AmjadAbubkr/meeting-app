@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ScreenShell } from '../../components/ScreenShell';
 import { useRecordingController } from '../../services/recorder';
@@ -42,7 +42,8 @@ export function MeetingScreen({ navigation, noSafeArea }: any) {
     hasTranscript,
   } = useProcessingPipeline();
 
-  const [apiKeysReady, setApiKeysReady] = useState(true);
+  const [apiKeysReady, setApiKeysReady] = useState(false);
+  const pipelineStartedRef = useRef(false);
 
   useEffect(() => {
     if (appState === 'FORM') {
@@ -65,10 +66,14 @@ export function MeetingScreen({ navigation, noSafeArea }: any) {
 
   useEffect(() => {
     if (appState === 'PROCESSING' && !error) {
-      runFullPipeline();
+      if (!pipelineStartedRef.current) {
+        pipelineStartedRef.current = true;
+        runFullPipeline();
+      }
+    } else if (appState !== 'PROCESSING') {
+      pipelineStartedRef.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appState]);
+  }, [appState, error, runFullPipeline]);
 
   const dateLabel = useMemo(() => new Date().toLocaleString(), []);
 
