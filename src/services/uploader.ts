@@ -211,7 +211,6 @@ export function useUploadController() {
   const setAppState = useAppStore((s) => s.setAppState);
 
   const upload = async () => {
-    setAppState('PROCESSING');
     setProcessingStep('Selecting audio file...');
 
     try {
@@ -222,14 +221,14 @@ export function useUploadController() {
       });
 
       if (!result) {
-        setAppState('READY');
         setProcessingStep('');
         return;
       }
 
       setProcessingStep(`Upload complete. ${result.chunkCount} chunk(s) ready.`);
+      // Only now transition — this triggers runFullPipeline via useEffect
+      setAppState('PROCESSING');
     } catch (error) {
-      setAppState('READY');
       setProcessingStep('');
       throw error;
     }

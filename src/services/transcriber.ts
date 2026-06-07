@@ -55,32 +55,22 @@ export async function transcribeChunks(
 
       // Build multipart form-data body
       const boundary = `----FormBoundary${Date.now()}`;
-      const bodyParts: string[] = [];
+      const CRLF = '\r\n';
 
-      // model field
-      bodyParts.push(
-        `--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\n${GROQ_MODEL}`,
-      );
+      // Build text parts of the multipart body as a single string
+      const preamble = [
+        `--${boundary}${CRLF}Content-Disposition: form-data; name="model"${CRLF}${CRLF}${GROQ_MODEL}${CRLF}`,
+        `--${boundary}${CRLF}Content-Disposition: form-data; name="language"${CRLF}${CRLF}${langCode}${CRLF}`,
+        `--${boundary}${CRLF}Content-Disposition: form-data; name="response_format"${CRLF}${CRLF}verbose_json${CRLF}`,
+        `--${boundary}${CRLF}Content-Disposition: form-data; name="file"; filename="${filename}"${CRLF}Content-Type: application/octet-stream${CRLF}${CRLF}`,
+      ].join('');
 
-      // language field
-      bodyParts.push(
-        `--${boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\n${langCode}`,
-      );
+      const epilogue = `${CRLF}--${boundary}--${CRLF}`;
 
-      // response_format field
-      bodyParts.push(
-        `--${boundary}\r\nContent-Disposition: form-data; name="response_format"\r\n\r\nverbose_json`,
-      );
-
-      // file field — send as base64 data URI
-      bodyParts.push(
-        `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: application/octet-stream\r\n\r\n`,
-      );
-
-      // We need to convert the string body to a byte array so we can append the raw base64 audio data
-      // Build the full body as a string with the base64 inline (Groq accepts base64 in the file field)
-      const headerStr = bodyParts.join('');
-      const footerStr = `\r\n--${boundary}--\r\n`;
+      const encoder = new TextEncoder();
+      const headerBytes = encoder.encode(preamble);
+      const audioBytes = Uint8Array.from(atob(base64Audio), (c) => c.charCodeAt(0));
+      const footerBytes = encoder.encode(epilogue);
 
       // Convert to bytes for proper binary handling
       const encoder = new TextEncoder();

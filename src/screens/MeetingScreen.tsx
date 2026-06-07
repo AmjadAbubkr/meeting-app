@@ -133,7 +133,7 @@ export function MeetingScreen({ navigation }: any) {
         )}
 
         {appState === 'READY' && (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 20 }}>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 28, paddingHorizontal: 24 }}>
             {!apiKeysReady && (
               <Pressable
                 onPress={() => navigation.navigate('Settings')}
@@ -149,9 +149,9 @@ export function MeetingScreen({ navigation }: any) {
               onPress={apiKeysReady ? handleStartRecording : undefined}
               style={[
                 {
-                  width: 130,
-                  height: 130,
-                  borderRadius: 65,
+                  width: 140,
+                  height: 140,
+                  borderRadius: 70,
                   alignItems: 'center',
                   justifyContent: 'center',
                   shadowColor: 'rgba(212,165,116,0.25)',
@@ -168,23 +168,25 @@ export function MeetingScreen({ navigation }: any) {
             >
               <Text
                 style={{
+                  fontSize: 40,
                   color: apiKeysReady ? '#0f0f0f' : '#8a7e72',
-                  fontWeight: '900',
                 }}
               >
-                MIC
+                🎙️
               </Text>
             </Pressable>
-            <Text style={{ color: '#e8d5b7', fontSize: 16 }}>
+            <Text style={{ color: '#e8d5b7', fontSize: 16, textAlign: 'center' }}>
               {apiKeysReady ? 'Tap to start recording' : 'Add API keys to continue'}
             </Text>
-            <PrimaryButton
-              label="Upload Audio"
-              onPress={handleUpload}
-              variant="ghost"
-              disabled={!apiKeysReady}
-            />
-            <PrimaryButton label="Cancel" onPress={resetMeeting} variant="ghost" />
+            <View style={{ width: '100%', gap: 12 }}>
+              <PrimaryButton
+                label="Upload Audio"
+                onPress={handleUpload}
+                variant="ghost"
+                disabled={!apiKeysReady}
+              />
+              <PrimaryButton label="Cancel" onPress={resetMeeting} variant="ghost" />
+            </View>
           </View>
         )}
 
