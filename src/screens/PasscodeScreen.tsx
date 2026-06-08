@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Keyboard, Text, TextInput, View } from 'react-native';
 import { ScreenShell } from '../components/ScreenShell';
 import { PrimaryButton } from '../components/PrimaryButton';

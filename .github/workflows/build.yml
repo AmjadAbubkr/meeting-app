@@ -42,17 +42,13 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install dependencies
-        run: npm install
+- name: Install dependencies
+  run: npm install
 
-      - name: Create .env
-        run: |
-          cat > .env <<'EOF'
-          GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
-          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-          EOF
+- name: Lint
+  run: npm run lint
 
-      - name: Decode keystore
+- name: Decode keystore
         env:
           KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
         run: |

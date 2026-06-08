@@ -1,7 +1,9 @@
 import type { ReportData } from '../store/appStore';
 
+// DEAD EXPORT — verify before removing
 export type SectionKind = 'bullets' | 'paragraph';
 
+// DEAD EXPORT — verify before removing
 export type SectionKey =
   | 'summary'
   | 'overview'
@@ -10,6 +12,7 @@ export type SectionKey =
   | 'decisionsMade'
   | 'openQuestions';
 
+// DEAD EXPORT — verify before removing
 export type SectionDescriptor = {
   key: SectionKey;
   title: string;
@@ -17,6 +20,7 @@ export type SectionDescriptor = {
   read: (report: ReportData, summary: string[]) => string | string[] | null;
 };
 
+// DEAD EXPORT — verify before removing
 export const REPORT_SECTIONS: readonly SectionDescriptor[] = [
   {
     key: 'summary',
@@ -59,6 +63,7 @@ export const REPORT_SECTIONS: readonly SectionDescriptor[] = [
   },
 ] as const;
 
+// DEAD EXPORT — verify before removing
 export type RenderableSection = {
   section: SectionDescriptor;
   value: string | string[];

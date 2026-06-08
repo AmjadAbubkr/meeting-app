@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -32,17 +32,29 @@ export function MeetingDetailScreen({ navigation, route }: any) {
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [showRaw, setShowRaw] = useState(false);
 
   // Load meeting on focus
   useFocusEffect(
     useCallback(() => {
+      let active = true;
+
       getMeeting(meetingId).then((m) => {
+        if (!active) return;
         if (m) {
           setMeeting(m);
           setEditedTitle(m.title);
+        } else {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          }
         }
       });
-    }, [meetingId]),
+
+      return () => {
+        active = false;
+      };
+    }, [meetingId, navigation]),
   );
 
   // Determine if report exists for current language
@@ -50,13 +62,15 @@ export function MeetingDetailScreen({ navigation, route }: any) {
   const currentReportData = parsedReports[currentLang];
 
   // Set initial language based on what's available
+  const initialLangSet = useRef(false);
   useEffect(() => {
-    if (meeting && !currentReportData) {
+    if (!initialLangSet.current && meeting && !currentReportData) {
       if (parsedReports.EN) {
-        setCurrentLang('EN');
+        setCurrentLang('EN'); // eslint-disable-line react-hooks/set-state-in-effect
       } else if (parsedReports.FR) {
         setCurrentLang('FR');
       }
+      initialLangSet.current = true;
     }
     // Only on initial load when meeting ID changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,13 +219,34 @@ export function MeetingDetailScreen({ navigation, route }: any) {
   };
 
   const renderTranscriptTab = () => {
-    const transcriptText = meeting?.rawTranscript;
+    const hasCleaned = !!meeting?.cleanedTranscript?.trim();
+    const displayText = showRaw ? meeting?.rawTranscript ?? '' : meeting?.cleanedTranscript ?? meeting?.rawTranscript ?? '';
 
     return (
       <View style={styles.tabContent}>
+        {hasCleaned && (
+          <View style={styles.transcriptToggleRow}>
+            <Pressable
+              onPress={() => setShowRaw(false)}
+              style={[styles.langChip, !showRaw && styles.langChipActive]}
+            >
+              <Text style={[styles.langText, !showRaw && styles.langTextActive]}>
+                Cleaned
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setShowRaw(true)}
+              style={[styles.langChip, showRaw && styles.langChipActive]}
+            >
+              <Text style={[styles.langText, showRaw && styles.langTextActive]}>
+                Raw
+              </Text>
+            </Pressable>
+          </View>
+        )}
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
-          {transcriptText ? (
-            <Text style={styles.transcriptText}>{transcriptText}</Text>
+          {displayText.trim() ? (
+            <Text style={styles.transcriptText}>{displayText}</Text>
           ) : (
             <Text style={styles.noDataText}>No transcript available.</Text>
           )}
@@ -486,5 +521,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginTop: 40,
+  },
+  transcriptToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    paddingBottom: 8,
   },
 });

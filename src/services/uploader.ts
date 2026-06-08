@@ -1,11 +1,10 @@
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import RNFS, { CachesDirectoryPath } from 'react-native-fs';
-import { CHUNK_SIZE_BYTES, SUPPORTED_AUDIO_FORMATS } from '../config';
+import { CHUNK_SIZE_BYTES, SUPPORTED_AUDIO_FORMATS, WARN_UPLOAD_SIZE_BYTES } from '../config';
 import { FFmpegKit, FFprobeKit, ReturnCode } from 'react-native-ffmpeg-kit';
 import { useAppStore } from '../store/appStore';
 import { Alert } from 'react-native';
 
-const SIZE_WARNING_BYTES = 500 * 1024 * 1024; // 500 MB
 
 /**
  * Open a file picker filtered to audio types, validate format and size,
@@ -44,7 +43,7 @@ export async function pickAndChunkAudio(
     }
 
     const fileSize = Number(stat.size);
-    if (fileSize > SIZE_WARNING_BYTES) {
+    if (fileSize > WARN_UPLOAD_SIZE_BYTES) {
       // Show warning and let user decide
       const sizeMB = (fileSize / (1024 * 1024)).toFixed(1);
       return new Promise((resolve) => {
@@ -186,6 +185,7 @@ export async function chunkExistingFile(
 /**
  * Delete all temp upload chunk files from the cache directory.
  */
+// DEAD EXPORT — verify before removing
 export async function cleanUploadChunks(): Promise<void> {
   try {
     const items = await RNFS.readDir(CachesDirectoryPath);

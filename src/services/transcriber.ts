@@ -1,5 +1,6 @@
 import RNFS from 'react-native-fs';
 import { getApiKey } from './apiKeys';
+import { chunkAudioFile, cleanChunkDir } from './chunker';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
 const GROQ_MODEL = 'whisper-large-v3-turbo';
@@ -117,16 +118,28 @@ export async function transcribeChunks(
   }
 
   const langCode = language.toLowerCase();
-  const total = audioChunks.length;
 
+  // Expand any chunk that exceeds CHUNK_SIZE_BYTES into sub-chunks
+  const expandedChunks: string[] = [];
+  const chunkedDirs: string[][] = [];
+
+  for (const chunkPath of audioChunks) {
+    const subChunks = await chunkAudioFile(chunkPath);
+    if (subChunks.length > 1) {
+      chunkedDirs.push(subChunks);
+    }
+    expandedChunks.push(...subChunks);
+  }
+
+  const total = expandedChunks.length;
   let completed = 0;
-  const results = await mapWithConcurrency(audioChunks, 3, async (chunkPath, index) => {
+
+  const results = await mapWithConcurrency(expandedChunks, 3, async (chunkPath, index) => {
     try {
       const text = await transcribeChunk(chunkPath, langCode, apiKey);
       return { index, text };
     } catch (e) {
       if (e instanceof Error && e.message.startsWith('Groq API error')) throw e;
-      console.warn(`[transcribe] chunk ${index} skipped:`, e);
       return { index, text: '' };
     } finally {
       completed += 1;
@@ -134,12 +147,17 @@ export async function transcribeChunks(
     }
   });
 
+  // Cleanup chunk directories (best-effort)
+  for (const dir of chunkedDirs) {
+    await cleanChunkDir(dir);
+  }
+
   const parts = results
     .sort((a, b) => a.index - b.index)
     .map((r) => r.text)
     .filter((t) => t.trim().length > 0);
 
-  const rawTranscript = parts.join(' ');
+  const rawTranscript = parts.join('\n');
 
   if (!rawTranscript.trim()) {
     throw new Error('Transcription returned empty results for all chunks.');

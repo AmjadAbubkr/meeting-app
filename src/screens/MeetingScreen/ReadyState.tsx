@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { theme } from './theme';

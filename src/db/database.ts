@@ -246,6 +246,7 @@ export async function setSetting(
 /**
  * Get all settings as an array of { key, value } objects.
  */
+// DEAD EXPORT — verify before removing
 export async function getAllSettings(): Promise<
   Array<{ key: string; value: string }>
 > {
@@ -456,11 +457,13 @@ function rowToMeetingRecord(
   };
 }
 
+// DEAD EXPORT — verify before removing
 export type LangReport = {
   report: ReportData;
   summary: string[];
 };
 
+// DEAD EXPORT — verify before removing
 export type ParsedReports = {
   EN?: LangReport;
   FR?: LangReport;

@@ -17,7 +17,7 @@ export function ScreenShell({ children, noPadding, noSafeArea }: Props) {
         style={[
           styles.container,
           noPadding && styles.noPadding,
-          { paddingTop: 0, paddingBottom: insets.bottom },
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
         ]}
       >
         <StatusBar barStyle="light-content" />

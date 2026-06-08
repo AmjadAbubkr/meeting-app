@@ -1,9 +1,9 @@
 import RNFS from 'react-native-fs';
-import { Share, Alert, PermissionsAndroid, Platform } from 'react-native';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { Share, PermissionsAndroid, Platform } from 'react-native';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import type { MeetingRecord } from '../db/database';
-import { parseReports, getReportForLanguage } from '../db/database';
+import { getReportForLanguage } from '../db/database';
 import { getRenderableSections } from './reportSections';
 import type { ReportData } from '../store/appStore';
 

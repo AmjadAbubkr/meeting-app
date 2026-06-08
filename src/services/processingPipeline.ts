@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import NetInfo from '@react-native-community/netinfo';
 import { useAppStore } from '../store/appStore';
 import { transcribeChunks } from './transcriber';
 import { generateReport } from './generator';
@@ -26,6 +27,7 @@ function buildReportsJson(
 
 type CommitInput = {
   transcript: string;
+  cleanedTranscript?: string;
   report?: Record<string, any>;
   summary?: string[];
 };
@@ -63,6 +65,7 @@ async function commitMeeting(input: CommitInput): Promise<number> {
     title: meetingTitle,
     date: meetingDate,
     rawTranscript: input.transcript,
+    cleanedTranscript: input.cleanedTranscript ?? undefined,
     createdAt: new Date().toISOString(),
     ...(reportsJson !== undefined ? { reports: reportsJson } : {}),
   });
@@ -90,22 +93,26 @@ export function useProcessingPipeline() {
   const failedStepIndex = useAppStore((s) => s.failedStepIndex);
   const rawTranscript = useAppStore((s) => s.rawTranscript);
 
-  const setAppState = useAppStore((s) => s.setAppState);
   const setProcessingStep = useAppStore((s) => s.setProcessingStep);
   const setProcessingStepIndex = useAppStore((s) => s.setProcessingStepIndex);
   const setTranscriptFromApi = useAppStore((s) => s.setTranscriptFromApi);
   const setResults = useAppStore((s) => s.setResults);
   const setError = useAppStore((s) => s.setError);
   const clearError = useAppStore((s) => s.clearError);
+  const setCanKeepTranscriptOnly = useAppStore((s) => s.setCanKeepTranscriptOnly);
 
   const runFullPipeline = useCallback(async () => {
     clearError();
+    const netState = await NetInfo.fetch();
+    if (!netState.isConnected) {
+      setError('No internet connection. Connect and retry.', 0);
+      return;
+    }
     setProcessingStepIndex(0);
+  let currentStepIndex = 0;
+  const { audioChunks, currentLanguage } = useAppStore.getState();
 
-    const { audioChunks, currentLanguage } = useAppStore.getState();
-
-    let currentStepIndex = 0;
-    try {
+  try {
       setProcessingStep(STEP_LABELS[0]);
       const langCode = currentLanguage === 'EN' ? 'en' : 'fr';
       const transcript = await transcribeChunks(audioChunks, langCode, (current, total) => {
@@ -113,21 +120,26 @@ export function useProcessingPipeline() {
       });
       setTranscriptFromApi(transcript);
 
-      currentStepIndex = 1;
-      setProcessingStep(STEP_LABELS[1]);
-      setProcessingStepIndex(1);
-      const result = await generateReport(transcript, currentLanguage);
-      setResults(result.report, result.summary);
+  setProcessingStep(STEP_LABELS[1]);
+  setProcessingStepIndex(1);
+  currentStepIndex = 1;
+  const result = await generateReport(transcript, currentLanguage);
+    const { cleanedTranscript } = useAppStore.getState();
+    setResults(result.report, result.summary, cleanedTranscript || transcript);
 
-      currentStepIndex = 2;
-      await commitMeeting({
-        transcript,
-        report: result.report,
-        summary: result.summary,
-      });
+    currentStepIndex = 2;
+    await commitMeeting({
+      transcript,
+      cleanedTranscript: cleanedTranscript || transcript,
+      report: result.report,
+      summary: result.summary,
+    });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
       setError(message, currentStepIndex);
+      if (currentStepIndex === 1) {
+        setCanKeepTranscriptOnly(true);
+      }
     }
   }, [
     setProcessingStep,
@@ -136,6 +148,7 @@ export function useProcessingPipeline() {
     setResults,
     setError,
     clearError,
+    setCanKeepTranscriptOnly,
   ]);
 
   const retryFromFailedStep = useCallback(async () => {
@@ -153,15 +166,16 @@ export function useProcessingPipeline() {
       }
 
       if (failedIndex === 1) {
-        const { rawTranscript: transcript, currentLanguage } = useAppStore.getState();
+        const { rawTranscript: transcript, currentLanguage, cleanedTranscript: storedCleaned } = useAppStore.getState();
         setProcessingStep(STEP_LABELS[1]);
         setProcessingStepIndex(1);
 
         const result = await generateReport(transcript, currentLanguage);
-        setResults(result.report, result.summary);
+        setResults(result.report, result.summary, storedCleaned || transcript);
 
         await commitMeeting({
           transcript,
+          cleanedTranscript: storedCleaned || transcript,
           report: result.report,
           summary: result.summary,
         });
@@ -169,9 +183,10 @@ export function useProcessingPipeline() {
       }
 
       if (failedIndex === 2) {
-        const { rawTranscript: transcript, report, summary } = useAppStore.getState();
+        const { rawTranscript: transcript, report, summary, cleanedTranscript } = useAppStore.getState();
         await commitMeeting({
           transcript,
+          cleanedTranscript,
           report,
           summary,
         });

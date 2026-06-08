@@ -1,4 +1,3 @@
-import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { theme } from './theme';
@@ -8,6 +7,7 @@ type Props = {
   error: string | null;
   hasTranscript: boolean;
   failedStepIndex: number | null;
+  canKeepTranscriptOnly: boolean;
   onRetry: () => Promise<void>;
   onKeepTranscriptOnly: () => Promise<void>;
   onCancel: () => void;
@@ -18,6 +18,7 @@ export function ProcessingState({
   error,
   hasTranscript,
   failedStepIndex,
+  canKeepTranscriptOnly,
   onRetry,
   onKeepTranscriptOnly,
   onCancel,
@@ -39,7 +40,7 @@ export function ProcessingState({
       <View style={styles.actions}>
         <PrimaryButton label="Retry" onPress={onRetry} />
 
-        {hasTranscript && failedStepIndex !== null && failedStepIndex >= 1 && (
+        {canKeepTranscriptOnly && hasTranscript && failedStepIndex !== null && failedStepIndex >= 1 && (
           <PrimaryButton
             label="Keep transcript only"
             onPress={onKeepTranscriptOnly}

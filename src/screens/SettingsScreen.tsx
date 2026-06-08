@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,23 +18,28 @@ import {
   hasApiKey,
   deleteApiKey,
 } from '../services/apiKeys';
-import { hasPasscode, savePasscode, verifyPasscode } from '../services/passcode';
+import { savePasscode, verifyPasscode } from '../services/passcode';
+import { useAppStore } from '../store/appStore';
 import type { Language } from '../store/appStore';
 
 type EditingKey = 'groq' | 'gemini' | null;
 
-export function SettingsScreen({ navigation, noSafeArea }: any) {
+export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
   const [defaultLanguage, setDefaultLanguage] = useState<Language>('EN');
   const [groqExists, setGroqExists] = useState(false);
   const [geminiExists, setGeminiExists] = useState(false);
   const [editingKey, setEditingKey] = useState<EditingKey>(null);
   const [editingKeyValue, setEditingKeyValue] = useState('');
   const [testingKey, setTestingKey] = useState<'groq' | 'gemini' | null>(null);
-  const [testResult, setTestResult] = useState<'valid' | 'invalid' | null>(null);
+  const [groqTestResult, setGroqTestResult] = useState<'valid' | 'invalid' | null>(null);
+  const [geminiTestResult, setGeminiTestResult] = useState<'valid' | 'invalid' | null>(null);
   const [storageInfo, setStorageInfo] = useState<{ meetingCount: number; audioSizeMB: number }>({
     meetingCount: 0,
     audioSizeMB: 0,
   });
+
+  const resetMeeting = useAppStore((s) => s.resetMeeting);
+  const setAuthenticated = useAppStore((s) => s.setAuthenticated);
 
   // Passcode change state
   const [changingPasscode, setChangingPasscode] = useState(false);
@@ -42,11 +47,6 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
   const [oldPasscode, setOldPasscode] = useState('');
   const [newPasscode, setNewPasscode] = useState('');
   const [confirmPasscode, setConfirmPasscode] = useState('');
-
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, []);
 
   const loadSettings = async () => {
     const lang = await getSetting('defaultLanguage');
@@ -63,6 +63,12 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
     setStorageInfo(info);
   };
 
+  // Load settings on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadSettings();
+  }, []);
+
   // Language selection
   const handleLanguageChange = useCallback(async (lang: Language) => {
     setDefaultLanguage(lang);
@@ -73,29 +79,37 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
   const handleStartEditKey = useCallback((key: EditingKey) => {
     setEditingKey(key);
     setEditingKeyValue('');
-    setTestResult(null);
+    if (key === 'groq') setGroqTestResult(null);
+    if (key === 'gemini') setGeminiTestResult(null);
   }, []);
 
   const handleSaveKey = useCallback(async () => {
     if (!editingKey || !editingKeyValue.trim()) return;
     await setApiKey(editingKey, editingKeyValue.trim());
-    if (editingKey === 'groq') setGroqExists(true);
-    if (editingKey === 'gemini') setGeminiExists(true);
+    if (editingKey === 'groq') {
+      setGroqExists(true);
+      setGroqTestResult(null);
+    }
+    if (editingKey === 'gemini') {
+      setGeminiExists(true);
+      setGeminiTestResult(null);
+    }
     setEditingKey(null);
     setEditingKeyValue('');
-    setTestResult(null);
   }, [editingKey, editingKeyValue]);
 
   const handleCancelEditKey = useCallback(() => {
     setEditingKey(null);
     setEditingKeyValue('');
-    setTestResult(null);
+    setGroqTestResult(null);
+    setGeminiTestResult(null);
   }, []);
 
   const handleTestKey = useCallback(
     async (keyName: 'groq' | 'gemini') => {
       setTestingKey(keyName);
-      setTestResult(null);
+      if (keyName === 'groq') setGroqTestResult(null);
+      if (keyName === 'gemini') setGeminiTestResult(null);
 
       try {
         let keyValue: string;
@@ -106,7 +120,8 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
         }
 
         if (!keyValue) {
-          setTestResult('invalid');
+          if (keyName === 'groq') setGroqTestResult('invalid');
+          if (keyName === 'gemini') setGeminiTestResult('invalid');
           setTestingKey(null);
           return;
         }
@@ -116,15 +131,16 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
             method: 'GET',
             headers: { Authorization: `Bearer ${keyValue}` },
           });
-          setTestResult(response.ok ? 'valid' : 'invalid');
+          setGroqTestResult(response.ok ? 'valid' : 'invalid');
         } else {
           const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models?key=${keyValue}`,
           );
-          setTestResult(response.ok ? 'valid' : 'invalid');
+          setGeminiTestResult(response.ok ? 'valid' : 'invalid');
         }
       } catch {
-        setTestResult('invalid');
+        if (keyName === 'groq') setGroqTestResult('invalid');
+        if (keyName === 'gemini') setGeminiTestResult('invalid');
       } finally {
         setTestingKey(null);
       }
@@ -140,10 +156,9 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
         style: 'destructive',
         onPress: async () => {
           await deleteApiKey(keyName);
-          if (keyName === 'groq') setGroqExists(false);
-          if (keyName === 'gemini') setGeminiExists(false);
+          if (keyName === 'groq') { setGroqExists(false); setGroqTestResult(null); }
+          if (keyName === 'gemini') { setGeminiExists(false); setGeminiTestResult(null); }
           setEditingKey(null);
-          setTestResult(null);
         },
       },
     ]);
@@ -153,7 +168,7 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
   const handleClearAllData = useCallback(() => {
     Alert.alert(
       'Clear All Data',
-      'This will permanently delete all meetings, settings, and audio files. This cannot be undone.',
+      'This will permanently delete all meetings, transcripts, audio files, and API keys. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -161,13 +176,18 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
           style: 'destructive',
           onPress: async () => {
             await deleteAllData();
+            await deleteApiKey('groq');
+            await deleteApiKey('gemini');
             setStorageInfo({ meetingCount: 0, audioSizeMB: 0 });
-            Alert.alert('Done', 'All data has been cleared.');
+            setGroqExists(false);
+            setGeminiExists(false);
+            resetMeeting();
+            setAuthenticated(false);
           },
         },
       ],
     );
-  }, []);
+  }, [resetMeeting, setAuthenticated]);
 
   // Passcode change flow
   const handleChangePasscode = useCallback(() => {
@@ -314,13 +334,13 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
                   </Text>
                 </View>
                 <View style={styles.keyActions}>
-                  {testingKey === 'groq' ? (
-                    <ActivityIndicator size="small" color="#d4a574" />
-                  ) : testResult === 'valid' && editingKey === 'groq' ? (
-                    <Text style={styles.validIcon}>{'\u2713'}</Text>
-                  ) : testResult === 'invalid' && editingKey === 'groq' ? (
-                    <Text style={styles.invalidIcon}>{'\u2717'}</Text>
-                  ) : null}
+              {testingKey === 'groq' ? (
+                <ActivityIndicator size="small" color="#d4a574" />
+              ) : groqTestResult === 'valid' ? (
+                <Text style={styles.validIcon}>{'\u2713'}</Text>
+              ) : groqTestResult === 'invalid' ? (
+                <Text style={styles.invalidIcon}>{'\u2717'}</Text>
+              ) : null}
                   <Pressable onPress={() => handleTestKey('groq')} style={styles.smallBtn}>
                     <Text style={styles.smallBtnText}>Test</Text>
                   </Pressable>
@@ -361,13 +381,13 @@ export function SettingsScreen({ navigation, noSafeArea }: any) {
                   </Text>
                 </View>
                 <View style={styles.keyActions}>
-                  {testingKey === 'gemini' ? (
-                    <ActivityIndicator size="small" color="#d4a574" />
-                  ) : testResult === 'valid' && editingKey === 'gemini' ? (
-                    <Text style={styles.validIcon}>{'\u2713'}</Text>
-                  ) : testResult === 'invalid' && editingKey === 'gemini' ? (
-                    <Text style={styles.invalidIcon}>{'\u2717'}</Text>
-                  ) : null}
+              {testingKey === 'gemini' ? (
+                <ActivityIndicator size="small" color="#d4a574" />
+              ) : geminiTestResult === 'valid' ? (
+                <Text style={styles.validIcon}>{'\u2713'}</Text>
+              ) : geminiTestResult === 'invalid' ? (
+                <Text style={styles.invalidIcon}>{'\u2717'}</Text>
+              ) : null}
                   <Pressable onPress={() => handleTestKey('gemini')} style={styles.smallBtn}>
                     <Text style={styles.smallBtnText}>Test</Text>
                   </Pressable>

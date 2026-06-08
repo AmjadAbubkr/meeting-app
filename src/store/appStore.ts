@@ -18,6 +18,7 @@ type State = {
   meetingDate: string;
   audioChunks: string[];
   rawTranscript: string;
+  cleanedTranscript: string;
   currentLanguage: Language;
   report: ReportData;
   summary: string[];
@@ -28,13 +29,14 @@ type State = {
   isAuthenticated: boolean;
   error: string | null;
   failedStepIndex: number | null;
+  canKeepTranscriptOnly: boolean;
   setAppState: (appState: AppState) => void;
   setAuthenticated: (isAuthenticated: boolean) => void;
   setMeeting: (meeting: { id: number | null; title: string; date: string }) => void;
   addAudioChunk: (uri: string) => void;
   setTranscript: (rawTranscript: string) => void;
   setTranscriptFromApi: (rawTranscript: string) => void;
-  setResults: (report: ReportData, summary: string[]) => void;
+  setResults: (report: ReportData, summary: string[], cleanedTranscript: string) => void;
   setProcessingStep: (processingStep: string) => void;
   setProcessingStepIndex: (index: number) => void;
   setLanguage: (currentLanguage: Language) => void;
@@ -43,6 +45,7 @@ type State = {
   handleUploadChunk: (uri: string, chunkIndex: number, totalChunks: number) => void;
   setError: (error: string, stepIndex: number) => void;
   clearError: () => void;
+  setCanKeepTranscriptOnly: (val: boolean) => void;
   resetMeeting: () => void;
 };
 
@@ -53,6 +56,7 @@ const initial = {
   meetingDate: '',
   audioChunks: [] as string[],
   rawTranscript: '',
+  cleanedTranscript: '',
   currentLanguage: 'EN' as Language,
   report: {} as ReportData,
   summary: [] as string[],
@@ -63,6 +67,7 @@ const initial = {
   isAuthenticated: false,
   error: null as string | null,
   failedStepIndex: null as number | null,
+  canKeepTranscriptOnly: false as boolean,
 };
 
 export const useAppStore = create<State>((set) => ({
@@ -79,7 +84,7 @@ export const useAppStore = create<State>((set) => ({
   setTranscript: (rawTranscript) => set({ rawTranscript }),
   setTranscriptFromApi: (rawTranscript) =>
     set({ rawTranscript, processingStepIndex: 1 }),
-  setResults: (report, summary) => set({ report, summary, processingStepIndex: 2 }),
+  setResults: (report, summary, cleanedTranscript) => set({ report, summary, cleanedTranscript, processingStepIndex: 2 }),
   setProcessingStep: (processingStep) => set({ processingStep }),
   setProcessingStepIndex: (index) => set({ processingStepIndex: index }),
   setLanguage: (currentLanguage) => set({ currentLanguage }),
@@ -100,5 +105,7 @@ export const useAppStore = create<State>((set) => ({
   })),
   setError: (error, stepIndex) => set({ error, failedStepIndex: stepIndex }),
   clearError: () => set({ error: null, failedStepIndex: null }),
+  setCanKeepTranscriptOnly: (canKeepTranscriptOnly) => set({ canKeepTranscriptOnly }),
   resetMeeting: () => set(initial),
 }));
+

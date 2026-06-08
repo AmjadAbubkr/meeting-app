@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ScreenShell } from '../../components/ScreenShell';
 import { useRecordingController } from '../../services/recorder';
@@ -29,6 +29,7 @@ export function MeetingScreen({ navigation, noSafeArea }: any) {
   const setMeeting = useAppStore((s) => s.setMeeting);
   const setLanguage = useAppStore((s) => s.setLanguage);
   const resetMeeting = useAppStore((s) => s.resetMeeting);
+  const canKeepTranscriptOnly = useAppStore((s) => s.canKeepTranscriptOnly);
 
   const recordingController = useRecordingController();
   const uploadController = useUploadController();
@@ -111,15 +112,16 @@ export function MeetingScreen({ navigation, noSafeArea }: any) {
         )}
 
         {appState === 'PROCESSING' && (
-          <ProcessingState
-            stepLabel={processingStep || stepLabel}
-            error={error}
-            hasTranscript={hasTranscript}
-            failedStepIndex={failedStepIndex}
-            onRetry={retryFromFailedStep}
-            onKeepTranscriptOnly={keepTranscriptOnly}
-            onCancel={resetMeeting}
-          />
+        <ProcessingState
+          stepLabel={processingStep || stepLabel}
+          error={error}
+          hasTranscript={hasTranscript}
+          failedStepIndex={failedStepIndex}
+          canKeepTranscriptOnly={canKeepTranscriptOnly}
+          onRetry={retryFromFailedStep}
+          onKeepTranscriptOnly={keepTranscriptOnly}
+          onCancel={resetMeeting}
+        />
         )}
 
         {appState === 'RESULTS' && (

@@ -69,7 +69,7 @@ export async function startRecording(): Promise<string> {
 
     currentRecordingPath = result;
     return result;
-  } catch (error) {
+  } catch {
     throw new Error('Failed to start recording');
   }
 }
@@ -86,7 +86,7 @@ export async function stopRecording(): Promise<string> {
     const finalPath = currentRecordingPath ?? result;
     currentRecordingPath = null;
     return finalPath;
-  } catch (error) {
+  } catch {
     currentRecordingPath = null;
     throw new Error('Failed to stop recording');
   }

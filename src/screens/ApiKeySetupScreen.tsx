@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
 import { ScreenShell } from '../components/ScreenShell';
 import { PrimaryButton } from '../components/PrimaryButton';
-import { getApiKey, hasApiKey, setApiKey } from '../services/apiKeys';
+import { hasApiKey, setApiKey } from '../services/apiKeys';
 
 type KeyStatus = 'unknown' | 'testing' | 'valid' | 'invalid';
 
