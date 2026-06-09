@@ -34,13 +34,12 @@ export function MeetingScreen({ navigation, noSafeArea }: any) {
   const recordingController = useRecordingController();
   const uploadController = useUploadController();
   const {
-    runFullPipeline,
-    retryFromFailedStep,
-    keepTranscriptOnly,
-    stepLabel,
-    error,
-    failedStepIndex,
-    hasTranscript,
+  retryFromFailedStep,
+  keepTranscriptOnly,
+  stepLabel,
+  error,
+  failedStepIndex,
+  hasTranscript,
   } = useProcessingPipeline();
 
   const [apiKeysReady, setApiKeysReady] = useState(false);

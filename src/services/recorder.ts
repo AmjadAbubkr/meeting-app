@@ -160,12 +160,16 @@ export function useRecordingController() {
       for (let i = 0; i < chunkPaths.length; i += 1) {
         addAudioChunk(chunkPaths[i]);
       }
-      setChunkState(chunkPaths.length, 0);
-      setProcessingStep('');
+        setChunkState(chunkPaths.length, 0);
+        setProcessingStep('');
 
-      // Transition AFTER all chunks are in the store — prevents race condition
-      // where pipeline starts before audioChunks is populated.
-      setAppState('PROCESSING');
+        // Brief buffer to ensure Zustand store subscribers have re-rendered
+        // with the new audioChunks before the pipeline reads them.
+        await new Promise((r) => setTimeout(r, 300));
+
+        // Transition AFTER all chunks are in the store — prevents race condition
+        // where pipeline starts before audioChunks is populated.
+        setAppState('PROCESSING');
 
       return chunkPaths;
     } catch (error) {

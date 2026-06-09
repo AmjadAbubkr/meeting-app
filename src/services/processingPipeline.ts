@@ -89,8 +89,8 @@ async function runPipeline(
     setCanKeepTranscriptOnly: (v: boolean) => void;
   },
 ): Promise<void> {
-  let { audioChunks, currentLanguage, rawTranscript, cleanedTranscript } =
-    useAppStore.getState();
+  let { audioChunks } = useAppStore.getState();
+  const { currentLanguage, rawTranscript, cleanedTranscript } = useAppStore.getState();
   const { setProcessingStep, setProcessingStepIndex, setTranscriptFromApi,
     setResults, setError, setCanKeepTranscriptOnly } = deps;
 
@@ -192,9 +192,18 @@ export function useProcessingPipeline() {
 
   const runFullPipeline = useCallback(async () => {
     clearError();
+    const { audioChunks } = useAppStore.getState();
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
       setError('No internet connection. Connect and retry.', 0);
+      return;
+    }
+
+    // Early guard: fail fast before entering the pipeline if no audio chunks.
+    // This provides immediate user feedback instead of waiting for the
+    // 500ms retry inside runPipeline, which covers a deeper async race.
+    if (!audioChunks || audioChunks.length === 0) {
+      setError('No audio recorded. Start recording before ending meeting.', 0);
       return;
     }
 

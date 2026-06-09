@@ -59,20 +59,8 @@ export function MeetingDetailScreen({ navigation, route }: any) {
     }, [meetingId, navigation]),
   );
 
-  // Early return guard — don't run any UI logic against null meeting.
-  // Prevents crashes from async races where meeting hasn't loaded yet.
-  if (!meeting) {
-    return (
-      <ScreenShell>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#d4a574" />
-        </View>
-      </ScreenShell>
-    );
-  }
-
   // Determine if report exists for current language
-  const parsedReports = parseReports(meeting);
+  const parsedReports = meeting ? parseReports(meeting) : {};
   const currentReportData = parsedReports[currentLang];
 
   // Set initial language based on what's available
@@ -89,6 +77,18 @@ export function MeetingDetailScreen({ navigation, route }: any) {
     // Only on initial load when meeting ID changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meeting?.id]);
+
+  // Early return guard — don't run any UI logic against null meeting.
+  // Prevents crashes from async races where meeting hasn't loaded yet.
+  if (!meeting) {
+    return (
+      <ScreenShell>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#d4a574" />
+        </View>
+      </ScreenShell>
+    );
+  }
 
   const handleSaveTitle = async () => {
     if (!meeting || !editedTitle.trim()) return;

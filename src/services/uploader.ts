@@ -133,6 +133,11 @@ export function useUploadController() {
       }
 
       setProcessingStep(`Upload complete. ${result.chunkCount} chunk(s) ready.`);
+
+      // Brief buffer to ensure Zustand store subscribers have re-rendered
+      // with the new audioChunks before the pipeline reads them.
+      await new Promise((r) => setTimeout(r, 300));
+
       // Only now transition — this triggers runFullPipeline via useEffect
       setAppState('PROCESSING');
     } catch (error) {
