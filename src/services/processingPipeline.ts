@@ -78,6 +78,73 @@ async function commitMeeting(input: CommitInput): Promise<number> {
   return meetingId;
 }
 
+async function runPipeline(
+  fromStep: 0 | 1 | 2,
+  deps: {
+    setProcessingStep: (s: string) => void;
+    setProcessingStepIndex: (i: number) => void;
+    setTranscriptFromApi: (t: string) => void;
+    setResults: (r: any, s: string[], c: string) => void;
+    setError: (e: string, i: number) => void;
+    setCanKeepTranscriptOnly: (v: boolean) => void;
+  },
+): Promise<void> {
+  const { audioChunks, currentLanguage, rawTranscript, cleanedTranscript } =
+    useAppStore.getState();
+  const { setProcessingStep, setProcessingStepIndex, setTranscriptFromApi,
+          setResults, setError, setCanKeepTranscriptOnly } = deps;
+
+  let currentStepIndex: 0 | 1 | 2 = fromStep;
+
+  try {
+    let transcript = rawTranscript;
+
+    if (fromStep === 0) {
+      setProcessingStep(STEP_LABELS[0]);
+      setProcessingStepIndex(0);
+      currentStepIndex = 0;
+      const langCode = currentLanguage === 'EN' ? 'en' : 'fr';
+      transcript = await transcribeChunks(audioChunks, langCode, (current, total) => {
+        setProcessingStep(`Transcribing chunk ${current}/${total}...`);
+      });
+      setTranscriptFromApi(transcript);
+    }
+
+    if (fromStep <= 1) {
+      setProcessingStep(STEP_LABELS[1]);
+      setProcessingStepIndex(1);
+      currentStepIndex = 1;
+      const result = await generateReport(transcript, currentLanguage);
+      const stored = useAppStore.getState().cleanedTranscript;
+      setResults(result.report, result.summary, stored || transcript);
+      currentStepIndex = 2;
+      await commitMeeting({
+        transcript,
+        cleanedTranscript: stored || transcript,
+        report: result.report,
+        summary: result.summary,
+      });
+      return;
+    }
+
+    // fromStep === 2: commit only
+    currentStepIndex = 2;
+    const { report, summary } = useAppStore.getState();
+    await commitMeeting({
+      transcript,
+      cleanedTranscript: cleanedTranscript || transcript,
+      report,
+      summary,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+    setError(message, currentStepIndex);
+    if (currentStepIndex === 1) {
+      setCanKeepTranscriptOnly(true);
+    }
+  }
+}
+
 /**
  * Hook that orchestrates the full processing pipeline:
  * 1. Transcribe audio chunks via Groq Whisper
@@ -108,39 +175,14 @@ export function useProcessingPipeline() {
       setError('No internet connection. Connect and retry.', 0);
       return;
     }
-    setProcessingStepIndex(0);
-  let currentStepIndex = 0;
-  const { audioChunks, currentLanguage } = useAppStore.getState();
-
-  try {
-      setProcessingStep(STEP_LABELS[0]);
-      const langCode = currentLanguage === 'EN' ? 'en' : 'fr';
-      const transcript = await transcribeChunks(audioChunks, langCode, (current, total) => {
-        setProcessingStep(`Transcribing chunk ${current}/${total}...`);
-      });
-      setTranscriptFromApi(transcript);
-
-  setProcessingStep(STEP_LABELS[1]);
-  setProcessingStepIndex(1);
-  currentStepIndex = 1;
-  const result = await generateReport(transcript, currentLanguage);
-    const { cleanedTranscript } = useAppStore.getState();
-    setResults(result.report, result.summary, cleanedTranscript || transcript);
-
-    currentStepIndex = 2;
-    await commitMeeting({
-      transcript,
-      cleanedTranscript: cleanedTranscript || transcript,
-      report: result.report,
-      summary: result.summary,
+    await runPipeline(0, {
+      setProcessingStep,
+      setProcessingStepIndex,
+      setTranscriptFromApi,
+      setResults,
+      setError,
+      setCanKeepTranscriptOnly,
     });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
-      setError(message, currentStepIndex);
-      if (currentStepIndex === 1) {
-        setCanKeepTranscriptOnly(true);
-      }
-    }
   }, [
     setProcessingStep,
     setProcessingStepIndex,
@@ -153,56 +195,25 @@ export function useProcessingPipeline() {
 
   const retryFromFailedStep = useCallback(async () => {
     const { failedStepIndex: failedIndex } = useAppStore.getState();
-
-    if (failedIndex === null) {
-      return runFullPipeline();
-    }
-
     clearError();
-
-    try {
-      if (failedIndex === 0) {
-        return runFullPipeline();
-      }
-
-      if (failedIndex === 1) {
-        const { rawTranscript: transcript, currentLanguage, cleanedTranscript: storedCleaned } = useAppStore.getState();
-        setProcessingStep(STEP_LABELS[1]);
-        setProcessingStepIndex(1);
-
-        const result = await generateReport(transcript, currentLanguage);
-        setResults(result.report, result.summary, storedCleaned || transcript);
-
-        await commitMeeting({
-          transcript,
-          cleanedTranscript: storedCleaned || transcript,
-          report: result.report,
-          summary: result.summary,
-        });
-        return;
-      }
-
-      if (failedIndex === 2) {
-        const { rawTranscript: transcript, report, summary, cleanedTranscript } = useAppStore.getState();
-        await commitMeeting({
-          transcript,
-          cleanedTranscript,
-          report,
-          summary,
-        });
-        return;
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
-      setError(message, failedIndex);
-    }
+    const fromStep: 0 | 1 | 2 =
+      failedIndex === 1 ? 1 : failedIndex === 2 ? 2 : 0;
+    await runPipeline(fromStep, {
+      setProcessingStep,
+      setProcessingStepIndex,
+      setTranscriptFromApi,
+      setResults,
+      setError,
+      setCanKeepTranscriptOnly,
+    });
   }, [
-    runFullPipeline,
     setProcessingStep,
     setProcessingStepIndex,
+    setTranscriptFromApi,
     setResults,
     setError,
     clearError,
+    setCanKeepTranscriptOnly,
   ]);
 
   const keepTranscriptOnly = useCallback(async () => {

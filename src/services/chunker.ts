@@ -19,13 +19,17 @@ async function waitForFile(filePath: string, retries = 5, delayMs = 300): Promis
   return 0;
 }
 
-export async function chunkAudioFile(filePath: string): Promise<string[]> {
+export async function chunkAudioFile(
+  filePath: string,
+  outputExt?: string,
+): Promise<string[]> {
   const fileSize = await waitForFile(filePath);
 
   if (fileSize === 0 || fileSize <= CHUNK_SIZE_BYTES) {
     return [filePath];
   }
 
+  const ext = outputExt ?? 'm4a';
   const outputDir = `${CachesDirectoryPath}/transcribe-chunks-${Date.now()}`;
   await RNFS.mkdir(outputDir);
 
@@ -50,7 +54,7 @@ export async function chunkAudioFile(filePath: string): Promise<string[]> {
 
   for (let i = 0; i < numChunks; i++) {
     const startSec = i * chunkDuration;
-    const outputPath = `${outputDir}/chunk-${i}.m4a`;
+    const outputPath = `${outputDir}/chunk-${i}.${ext}`;
 
     const session = await FFmpegKit.execute(
       `-i "${filePath}" -ss ${startSec} -t ${chunkDuration} -c copy "${outputPath}"`,

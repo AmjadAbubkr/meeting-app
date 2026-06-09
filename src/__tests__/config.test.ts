@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { CHUNK_SIZE_BYTES, SUPPORTED_LANGUAGES, SUPPORTED_AUDIO_FORMATS, MAX_UPLOAD_SIZE_BYTES, WARN_UPLOAD_SIZE_BYTES } from '../config';
+import { CHUNK_SIZE_BYTES, SUPPORTED_LANGUAGES, SUPPORTED_AUDIO_FORMATS, WARN_UPLOAD_SIZE_BYTES } from '../config';
 
 describe('config', () => {
   it('CHUNK_SIZE_BYTES is 20MB', () => {
@@ -16,10 +16,6 @@ describe('config', () => {
     expect(SUPPORTED_AUDIO_FORMATS).toContain('wav');
     expect(SUPPORTED_AUDIO_FORMATS).toContain('m4a');
     expect(SUPPORTED_AUDIO_FORMATS).toContain('aac');
-  });
-
-  it('MAX_UPLOAD_SIZE_BYTES is 500MB', () => {
-    expect(MAX_UPLOAD_SIZE_BYTES).toBe(500 * 1024 * 1024);
   });
 
   it('WARN_UPLOAD_SIZE_BYTES is 500MB', () => {
