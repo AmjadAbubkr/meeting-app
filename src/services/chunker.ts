@@ -2,11 +2,27 @@ import { FFmpegKit, FFprobeKit, ReturnCode } from 'react-native-ffmpeg-kit';
 import RNFS, { CachesDirectoryPath } from 'react-native-fs';
 import { CHUNK_SIZE_BYTES } from '../config';
 
-export async function chunkAudioFile(filePath: string): Promise<string[]> {
-  const stat = await RNFS.stat(filePath);
-  const fileSize = Number(stat.size);
+async function waitForFile(filePath: string, retries = 5, delayMs = 300): Promise<number> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const exists = await RNFS.exists(filePath);
+      if (exists) {
+        const stat = await RNFS.stat(filePath);
+        const size = Number(stat.size);
+        if (size > 0) return size;
+      }
+    } catch {
+      // not ready yet
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+  return 0;
+}
 
-  if (fileSize <= CHUNK_SIZE_BYTES) {
+export async function chunkAudioFile(filePath: string): Promise<string[]> {
+  const fileSize = await waitForFile(filePath);
+
+  if (fileSize === 0 || fileSize <= CHUNK_SIZE_BYTES) {
     return [filePath];
   }
 

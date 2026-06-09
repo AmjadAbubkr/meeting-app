@@ -310,12 +310,14 @@ export function MeetingDetailScreen({ navigation, route }: any) {
       </View>
 
       {/* Export bottom sheet */}
-      <ExportBottomSheet
-        visible={showExport}
-        onClose={() => setShowExport(false)}
-        meeting={meeting}
-        language={currentLang}
-      />
+      {meeting && (
+        <ExportBottomSheet
+          visible={showExport}
+          onClose={() => setShowExport(false)}
+          meeting={meeting}
+          language={currentLang}
+        />
+      )}
 
         {/* Language switcher (only in Report tab) */}
         {activeTab === 'report' && (
@@ -356,9 +358,17 @@ export function MeetingDetailScreen({ navigation, route }: any) {
 
         {/* Tab content */}
         <View style={styles.tabContentContainer}>
-          {activeTab === 'report' && renderReportTab()}
-          {activeTab === 'transcript' && renderTranscriptTab()}
-          {activeTab === 'audio' && renderAudioTab()}
+          {!meeting ? (
+            <View style={styles.centerContent}>
+              <ActivityIndicator size="large" color="#d4a574" />
+            </View>
+          ) : (
+            <>
+              {activeTab === 'report' && renderReportTab()}
+              {activeTab === 'transcript' && renderTranscriptTab()}
+              {activeTab === 'audio' && renderAudioTab()}
+            </>
+          )}
         </View>
       </View>
     </ScreenShell>
