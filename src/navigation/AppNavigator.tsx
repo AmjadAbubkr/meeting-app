@@ -80,7 +80,7 @@ function LoadingScreen() {
 export function AppNavigator() {
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
   const [passcodeExists, setPasscodeExists] = useState<boolean | null>(null);
-  const [initialRoute, setInitialRoute] = useState<'ApiKeySetup' | 'Main'>('ApiKeySetup');
+  const [initialRoute, setInitialRoute] = useState<'ApiKeySetup' | 'Main' | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -89,11 +89,10 @@ export function AppNavigator() {
         const exists = await hasPasscode();
         setPasscodeExists(exists);
 
-        if (exists) {
-          setIsReady(true);
-          return;
-        }
-
+        // Always resolve initialRoute — even when a passcode exists.
+        // After the user authenticates, gateRoute needs initialRoute to
+        // determine the next screen. Without this, initialRoute stays null
+        // and the loading guard traps the user forever.
         const hasGroq = await hasApiKey('groq');
         const hasGemini = await hasApiKey('gemini');
         setInitialRoute(hasGroq && hasGemini ? 'Main' : 'ApiKeySetup');
@@ -105,11 +104,17 @@ export function AppNavigator() {
     })();
   }, []);
 
-  if (!isReady) {
+  if (!isReady || passcodeExists === null || initialRoute === null) {
     return <LoadingScreen />;
   }
 
-  const gateRoute = passcodeExists && !isAuthenticated ? 'Passcode' : initialRoute;
+  let gateRoute: 'Passcode' | 'ApiKeySetup' | 'Main';
+
+  if (passcodeExists && !isAuthenticated) {
+    gateRoute = 'Passcode';
+  } else {
+    gateRoute = initialRoute;
+  }
 
   return (
     <NavigationContainer>

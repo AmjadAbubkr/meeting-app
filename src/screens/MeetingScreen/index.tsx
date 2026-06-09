@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ScreenShell } from '../../components/ScreenShell';
 import { useRecordingController } from '../../services/recorder';
@@ -44,7 +44,6 @@ export function MeetingScreen({ navigation, noSafeArea }: any) {
   } = useProcessingPipeline();
 
   const [apiKeysReady, setApiKeysReady] = useState(false);
-  const pipelineStartedRef = useRef(false);
 
   useEffect(() => {
     if (appState === 'FORM') {
@@ -64,17 +63,6 @@ export function MeetingScreen({ navigation, noSafeArea }: any) {
       setApiKeysReady(hasGroq && hasGemini);
     })();
   }, [appState]);
-
-  useEffect(() => {
-    if (appState === 'PROCESSING' && !error) {
-      if (!pipelineStartedRef.current) {
-        pipelineStartedRef.current = true;
-        runFullPipeline();
-      }
-    } else if (appState !== 'PROCESSING') {
-      pipelineStartedRef.current = false;
-    }
-  }, [appState, error, runFullPipeline]);
 
   const dateLabel = useMemo(() => new Date().toLocaleString(), []);
 

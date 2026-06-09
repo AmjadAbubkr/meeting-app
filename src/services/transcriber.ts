@@ -113,8 +113,8 @@ export async function transcribeChunks(
     throw new Error('Groq API key is missing. Add it in Settings.');
   }
 
-  if (!audioChunks.length) {
-    throw new Error('No audio chunks to transcribe.');
+  if (!audioChunks || audioChunks.length === 0) {
+    throw new Error('Recording not ready. Please try again in a moment.');
   }
 
   const langCode = language.toLowerCase();

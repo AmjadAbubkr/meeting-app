@@ -45,9 +45,11 @@ export function MeetingDetailScreen({ navigation, route }: any) {
           setMeeting(m);
           setEditedTitle(m.title);
         } else {
-          if (navigation.canGoBack()) {
-            navigation.goBack();
-          }
+          // Meeting not found — navigate to root safely
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Main' }],
+          });
         }
       });
 
@@ -57,8 +59,20 @@ export function MeetingDetailScreen({ navigation, route }: any) {
     }, [meetingId, navigation]),
   );
 
+  // Early return guard — don't run any UI logic against null meeting.
+  // Prevents crashes from async races where meeting hasn't loaded yet.
+  if (!meeting) {
+    return (
+      <ScreenShell>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#d4a574" />
+        </View>
+      </ScreenShell>
+    );
+  }
+
   // Determine if report exists for current language
-  const parsedReports = meeting ? parseReports(meeting) : {};
+  const parsedReports = parseReports(meeting);
   const currentReportData = parsedReports[currentLang];
 
   // Set initial language based on what's available
@@ -97,7 +111,10 @@ export function MeetingDetailScreen({ navigation, route }: any) {
           style: 'destructive',
           onPress: async () => {
             await deleteMeeting(meeting.id);
-            navigation.goBack();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Main' }],
+            });
           },
         },
       ],
@@ -121,6 +138,15 @@ export function MeetingDetailScreen({ navigation, route }: any) {
     try {
       const result = await generateReport(meeting.rawTranscript, currentLang);
 
+      // Normalize report — Gemini may omit fields entirely per prompt instructions
+      const safeReport = {
+        overview: result.report.overview ?? '',
+        keyDiscussionPoints: result.report.keyDiscussionPoints ?? [],
+        actionItems: result.report.actionItems ?? [],
+        decisionsMade: result.report.decisionsMade ?? [],
+        openQuestions: result.report.openQuestions ?? [],
+      };
+
       // Build updated reports JSON: merge new language into existing reports
       let existingReports: Record<string, { report: any; summary: string[] }> = {};
       if (meeting.reports) {
@@ -130,7 +156,7 @@ export function MeetingDetailScreen({ navigation, route }: any) {
           // If existing is corrupt, start fresh
         }
       }
-      existingReports[currentLang] = { report: result.report, summary: result.summary };
+      existingReports[currentLang] = { report: safeReport, summary: result.summary };
       const reportsJson = JSON.stringify(existingReports);
 
       const updated = await updateMeeting(meeting.id, {
@@ -269,11 +295,7 @@ export function MeetingDetailScreen({ navigation, route }: any) {
         {/* Header */}
         <View style={styles.headerRow}>
       <Pressable
-        onPress={() => {
-          if (navigation.canGoBack()) {
-            navigation.goBack();
-          }
-        }}
+        onPress={() => navigation.goBack()}
         style={styles.headerBtn}
       >
         <Text style={styles.backText}>{'< Back'}</Text>
@@ -356,20 +378,14 @@ export function MeetingDetailScreen({ navigation, route }: any) {
           ))}
         </View>
 
-        {/* Tab content */}
-        <View style={styles.tabContentContainer}>
-          {!meeting ? (
-            <View style={styles.centerContent}>
-              <ActivityIndicator size="large" color="#d4a574" />
-            </View>
-          ) : (
-            <>
-              {activeTab === 'report' && renderReportTab()}
-              {activeTab === 'transcript' && renderTranscriptTab()}
-              {activeTab === 'audio' && renderAudioTab()}
-            </>
-          )}
-        </View>
+      {/* Tab content */}
+      <View style={styles.tabContentContainer}>
+        <>
+          {activeTab === 'report' && renderReportTab()}
+          {activeTab === 'transcript' && renderTranscriptTab()}
+          {activeTab === 'audio' && renderAudioTab()}
+        </>
+      </View>
       </View>
     </ScreenShell>
   );

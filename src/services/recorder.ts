@@ -153,7 +153,6 @@ export function useRecordingController() {
       const filePath = await stopRecording();
       KeepAwake.deactivate();
 
-      setAppState('PROCESSING');
       setProcessingStep('Chunking audio...');
 
       const chunkPaths = await chunkAudioFile(filePath);
@@ -163,6 +162,10 @@ export function useRecordingController() {
       }
       setChunkState(chunkPaths.length, 0);
       setProcessingStep('');
+
+      // Transition AFTER all chunks are in the store — prevents race condition
+      // where pipeline starts before audioChunks is populated.
+      setAppState('PROCESSING');
 
       return chunkPaths;
     } catch (error) {

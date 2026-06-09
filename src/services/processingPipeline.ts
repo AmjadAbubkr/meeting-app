@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { useAppStore } from '../store/appStore';
 import { transcribeChunks } from './transcriber';
@@ -89,10 +89,21 @@ async function runPipeline(
     setCanKeepTranscriptOnly: (v: boolean) => void;
   },
 ): Promise<void> {
-  const { audioChunks, currentLanguage, rawTranscript, cleanedTranscript } =
+  let { audioChunks, currentLanguage, rawTranscript, cleanedTranscript } =
     useAppStore.getState();
   const { setProcessingStep, setProcessingStepIndex, setTranscriptFromApi,
-          setResults, setError, setCanKeepTranscriptOnly } = deps;
+    setResults, setError, setCanKeepTranscriptOnly } = deps;
+
+  // Guard: wait briefly for async file flush consistency if chunks are empty.
+  // This covers the race where pipeline fires before the recorder has finished
+  // adding chunks to the store. Applies to both runFullPipeline and retryFromFailedStep.
+  if (fromStep === 0 && (!audioChunks || audioChunks.length === 0)) {
+    await new Promise((res) => setTimeout(res, 500));
+    audioChunks = useAppStore.getState().audioChunks;
+  }
+  if (fromStep === 0 && (!audioChunks || audioChunks.length === 0)) {
+    throw new Error('No audio recorded. Start recording before ending meeting.');
+  }
 
   let currentStepIndex: 0 | 1 | 2 = fromStep;
 
@@ -116,12 +127,22 @@ async function runPipeline(
       currentStepIndex = 1;
       const result = await generateReport(transcript, currentLanguage);
       const stored = useAppStore.getState().cleanedTranscript;
-      setResults(result.report, result.summary, stored || transcript);
+
+      // Normalize report — Gemini may omit fields entirely per prompt instructions
+      const safeReport = {
+        overview: result.report.overview ?? '',
+        keyDiscussionPoints: result.report.keyDiscussionPoints ?? [],
+        actionItems: result.report.actionItems ?? [],
+        decisionsMade: result.report.decisionsMade ?? [],
+        openQuestions: result.report.openQuestions ?? [],
+      };
+
+      setResults(safeReport, result.summary, stored || transcript);
       currentStepIndex = 2;
       await commitMeeting({
         transcript,
         cleanedTranscript: stored || transcript,
-        report: result.report,
+        report: safeReport,
         summary: result.summary,
       });
       return;
@@ -155,6 +176,7 @@ async function runPipeline(
  * On failure at any step: sets error state with step-level retry info.
  */
 export function useProcessingPipeline() {
+  const appState = useAppStore((s) => s.appState);
   const processingStepIndex = useAppStore((s) => s.processingStepIndex);
   const error = useAppStore((s) => s.error);
   const failedStepIndex = useAppStore((s) => s.failedStepIndex);
@@ -175,6 +197,7 @@ export function useProcessingPipeline() {
       setError('No internet connection. Connect and retry.', 0);
       return;
     }
+
     await runPipeline(0, {
       setProcessingStep,
       setProcessingStepIndex,
@@ -227,6 +250,21 @@ export function useProcessingPipeline() {
       setError(message, 2);
     }
   }, [setError, clearError]);
+
+  // Auto-run the pipeline when entering PROCESSING state.
+  // This ensures any consumer of the hook gets the auto-trigger,
+  // not just MeetingScreen.
+  const pipelineStartedRef = useRef(false);
+  useEffect(() => {
+    if (appState === 'PROCESSING' && !error) {
+      if (!pipelineStartedRef.current) {
+        pipelineStartedRef.current = true;
+        runFullPipeline();
+      }
+    } else if (appState !== 'PROCESSING') {
+      pipelineStartedRef.current = false;
+    }
+  }, [appState, error, runFullPipeline]);
 
   return {
     runFullPipeline,
