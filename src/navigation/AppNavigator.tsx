@@ -110,7 +110,7 @@ export function AppNavigator() {
 
   let gateRoute: 'Passcode' | 'ApiKeySetup' | 'Main';
 
-  if (passcodeExists && !isAuthenticated) {
+  if (!isAuthenticated) {
     gateRoute = 'Passcode';
   } else {
     gateRoute = initialRoute;

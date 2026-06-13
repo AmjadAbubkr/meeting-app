@@ -295,7 +295,16 @@ export function MeetingDetailScreen({ navigation, route }: any) {
         {/* Header */}
         <View style={styles.headerRow}>
       <Pressable
-        onPress={() => navigation.goBack()}
+        onPress={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Main' }],
+            });
+          }
+        }}
         style={styles.headerBtn}
       >
         <Text style={styles.backText}>{'< Back'}</Text>

@@ -18,7 +18,7 @@ import {
   hasApiKey,
   deleteApiKey,
 } from '../services/apiKeys';
-import { savePasscode, verifyPasscode } from '../services/passcode';
+import { hasPasscode, savePasscode, verifyPasscode } from '../services/passcode';
 import { useAppStore } from '../store/appStore';
 import type { Language } from '../store/appStore';
 
@@ -42,6 +42,7 @@ export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
   const setAuthenticated = useAppStore((s) => s.setAuthenticated);
 
   // Passcode change state
+  const [hasStoredPasscode, setHasStoredPasscode] = useState(false);
   const [changingPasscode, setChangingPasscode] = useState(false);
   const [passcodeStep, setPasscodeStep] = useState<'verify' | 'new' | 'confirm'>('verify');
   const [oldPasscode, setOldPasscode] = useState('');
@@ -58,6 +59,9 @@ export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
     const gemExists = await hasApiKey('gemini');
     setGroqExists(gExists);
     setGeminiExists(gemExists);
+
+    const hasPass = await hasPasscode();
+    setHasStoredPasscode(hasPass);
 
     const info = await getStorageInfo();
     setStorageInfo(info);
@@ -192,11 +196,11 @@ export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
   // Passcode change flow
   const handleChangePasscode = useCallback(() => {
     setChangingPasscode(true);
-    setPasscodeStep('verify');
+    setPasscodeStep(hasStoredPasscode ? 'verify' : 'new');
     setOldPasscode('');
     setNewPasscode('');
     setConfirmPasscode('');
-  }, []);
+  }, [hasStoredPasscode]);
 
   const handleVerifyOldPasscode = useCallback(async () => {
     const ok = await verifyPasscode(oldPasscode);
@@ -221,6 +225,7 @@ export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
       return;
     }
     await savePasscode(newPasscode);
+    setHasStoredPasscode(true);
     setChangingPasscode(false);
     Alert.alert('Passcode Changed', 'Your passcode has been updated.');
   }, [newPasscode, confirmPasscode]);
@@ -423,7 +428,10 @@ export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
             {/* Change Passcode */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Security</Text>
-              <PrimaryButton label="Change Passcode" onPress={handleChangePasscode} />
+              <PrimaryButton
+                label={hasStoredPasscode ? 'Change Passcode' : 'Set Passcode'}
+                onPress={handleChangePasscode}
+              />
             </View>
 
             {/* Clear All Data */}

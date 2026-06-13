@@ -17,6 +17,13 @@ const REPORT_JSON_SCHEMA = {
         decisionsMade: { type: 'array', items: { type: 'string' } },
         openQuestions: { type: 'array', items: { type: 'string' } },
       },
+      required: [
+        'overview',
+        'keyDiscussionPoints',
+        'actionItems',
+        'decisionsMade',
+        'openQuestions',
+      ],
     },
     summary: {
       type: 'array',
@@ -114,11 +121,11 @@ INSTRUCTIONS:
 3. Generate a concise executive summary as an array of bullet points (3-5 bullets)
 
 CRITICAL RULES:
-- Only include sections where the transcript contains relevant information.
-- If no action items were mentioned, OMIT the actionItems field entirely. Do NOT fabricate action items.
-- If no decisions were made, OMIT the decisionsMade field entirely.
-- If no open questions remain, OMIT the openQuestions field entirely.
-- If no key discussion points can be identified, OMIT the keyDiscussionPoints field.
+- You must populate all fields.
+- If no action items were mentioned, provide an empty array []. Do NOT fabricate action items.
+- If no decisions were made, provide an empty array [].
+- If no open questions remain, provide an empty array [].
+- If no key discussion points can be identified, provide an empty array [].
 - Do NOT fabricate, infer, or hallucinate any information that is not in the transcript.
 - Write all content in ${langLabel}.
 
