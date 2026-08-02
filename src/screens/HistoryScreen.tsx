@@ -11,6 +11,13 @@ type Section = {
   data: MeetingRecord[];
 };
 
+type HistoryScreenProps = {
+  navigation: {
+    navigate: (screen: 'MeetingDetail', params: { meetingId: number }) => void;
+  };
+  noSafeArea?: boolean;
+};
+
 function getDateGroup(dateStr: string): DateGroup {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -101,7 +108,7 @@ function MeetingListItem({
   );
 }
 
-export function HistoryScreen({ navigation, noSafeArea }: any) {
+export function HistoryScreen({ navigation, noSafeArea }: HistoryScreenProps) {
   const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
   const [searchText, setSearchText] = useState('');
 
