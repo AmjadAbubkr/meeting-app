@@ -62,7 +62,10 @@ export function ApiKeySetupScreen({ navigation }: any) {
     setGeminiStatus('testing');
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey.trim()}`,
+        'https://generativelanguage.googleapis.com/v1beta/models',
+        {
+          headers: { 'x-goog-api-key': geminiKey.trim() },
+        },
       );
 
       if (response.ok) {

@@ -68,8 +68,8 @@ export function ResultsState({
             {section.title}
           </Text>
           {section.kind === 'bullets'
-            ? (value as string[]).map((v, idx) => (
-                <Text key={idx} style={styles.bulletText}>
+            ? (value as string[]).map((v) => (
+                <Text key={`${section.key}-${v}`} style={styles.bulletText}>
                   {'\u2022'} {v}
                 </Text>
               ))

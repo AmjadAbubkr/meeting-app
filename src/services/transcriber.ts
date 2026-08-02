@@ -4,6 +4,7 @@ import { chunkAudioFile, cleanChunkDir } from './chunker';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
 const GROQ_MODEL = 'whisper-large-v3-turbo';
+const REQUEST_TIMEOUT_MS = 60_000;
 
 async function transcribeChunk(
   chunkPath: string,
@@ -40,14 +41,27 @@ async function transcribeChunk(
   bodyBytes.set(audioBytes, headerBytes.length);
   bodyBytes.set(footerBytes, headerBytes.length + audioBytes.length);
 
-  const response = await fetch(GROQ_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': `multipart/form-data; boundary=${boundary}`,
-    },
-    body: bodyBytes as any,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+      },
+      body: bodyBytes as any,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error('Groq transcription request timed out.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -134,22 +148,20 @@ export async function transcribeChunks(
   const total = expandedChunks.length;
   let completed = 0;
 
-  const results = await mapWithConcurrency(expandedChunks, 3, async (chunkPath, index) => {
-    try {
-      const text = await transcribeChunk(chunkPath, langCode, apiKey);
-      return { index, text };
-    } catch (e) {
-      if (e instanceof Error && e.message.startsWith('Groq API error')) throw e;
-      return { index, text: '' };
-    } finally {
-      completed += 1;
-      onProgress?.(completed, total);
-    }
-  });
-
-  // Cleanup chunk directories (best-effort)
-  for (const dir of chunkedDirs) {
-    await cleanChunkDir(dir);
+  let results: { index: number; text: string }[] = [];
+  try {
+    results = await mapWithConcurrency(expandedChunks, 2, async (chunkPath, index) => {
+      try {
+        const text = await transcribeChunk(chunkPath, langCode, apiKey);
+        return { index, text };
+      } finally {
+        completed += 1;
+        onProgress?.(completed, total);
+      }
+    });
+  } finally {
+    // Always remove temporary chunks, including when one request fails.
+    await Promise.all(chunkedDirs.map((dir) => cleanChunkDir(dir)));
   }
 
   const parts = results

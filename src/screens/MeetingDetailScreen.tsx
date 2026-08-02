@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,7 +12,14 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenShell } from '../components/ScreenShell';
 import { PrimaryButton } from '../components/PrimaryButton';
-import { deleteMeeting, getMeeting, updateMeeting, MeetingRecord, parseReports } from '../db/database';
+import {
+  deleteMeeting,
+  getMeeting,
+  getReportForLanguage,
+  updateMeeting,
+  MeetingRecord,
+  parseReports,
+} from '../db/database';
 import { generateReport } from '../services/generator';
 import { getRenderableSections } from '../services/reportSections';
 import { AudioPlayer } from '../components/AudioPlayer';
@@ -20,6 +27,23 @@ import { ExportBottomSheet } from '../components/ExportBottomSheet';
 import type { Language } from '../store/appStore';
 
 type Tab = 'report' | 'transcript' | 'audio';
+
+const TABS: { key: Tab; label: string }[] = [
+  { key: 'report', label: 'Report' },
+  { key: 'transcript', label: 'Transcript' },
+  { key: 'audio', label: 'Audio' },
+];
+
+export function getReportForDisplay(
+  meeting: MeetingRecord | null,
+  language: Language,
+) {
+  return meeting ? getReportForLanguage(meeting, language) : null;
+}
+
+export function handleMeetingDetailBack(navigation: { navigate: (screen: string) => void }) {
+  navigation.navigate('Main');
+}
 
 export function MeetingDetailScreen({ navigation, route }: any) {
   const meetingId: number = route.params.meetingId;
@@ -60,13 +84,17 @@ export function MeetingDetailScreen({ navigation, route }: any) {
   );
 
   // Determine if report exists for current language
-  const parsedReports = meeting ? parseReports(meeting) : {};
-  const currentReportData = parsedReports[currentLang];
+  const parsedReports = useMemo(
+    () => (meeting ? parseReports(meeting) : {}),
+    [meeting],
+  );
+  const currentReportData =
+    parsedReports[currentLang] ?? parsedReports.EN ?? parsedReports.FR;
 
   // Set initial language based on what's available
   const initialLangSet = useRef(false);
   useEffect(() => {
-    if (!initialLangSet.current && meeting && !currentReportData) {
+    if (!initialLangSet.current && meeting && !parsedReports[currentLang]) {
       if (parsedReports.EN) {
         setCurrentLang('EN'); // eslint-disable-line react-hooks/set-state-in-effect
       } else if (parsedReports.FR) {
@@ -74,9 +102,7 @@ export function MeetingDetailScreen({ navigation, route }: any) {
       }
       initialLangSet.current = true;
     }
-    // Only on initial load when meeting ID changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meeting?.id]);
+  }, [currentLang, meeting, parsedReports]);
 
   // Early return guard — don't run any UI logic against null meeting.
   // Prevents crashes from async races where meeting hasn't loaded yet.
@@ -173,12 +199,6 @@ export function MeetingDetailScreen({ navigation, route }: any) {
     }
   };
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'report', label: 'Report' },
-    { key: 'transcript', label: 'Transcript' },
-    { key: 'audio', label: 'Audio' },
-  ];
-
   const renderReportTab = () => {
     if (generating) {
       return (
@@ -232,8 +252,8 @@ export function MeetingDetailScreen({ navigation, route }: any) {
               {section.title}
             </Text>
             {section.kind === 'bullets'
-              ? (value as string[]).map((v, idx) => (
-                  <Text key={idx} style={styles.bulletText}>
+              ? (value as string[]).map((v) => (
+                  <Text key={`${section.key}-${v}`} style={styles.bulletText}>
                     {'\u2022'} {v}
                   </Text>
                 ))
@@ -295,16 +315,7 @@ export function MeetingDetailScreen({ navigation, route }: any) {
         {/* Header */}
         <View style={styles.headerRow}>
       <Pressable
-        onPress={() => {
-          if (navigation.canGoBack()) {
-            navigation.goBack();
-          } else {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Main' }],
-            });
-          }
-        }}
+        onPress={() => handleMeetingDetailBack(navigation)}
         style={styles.headerBtn}
       >
         <Text style={styles.backText}>{'< Back'}</Text>
@@ -374,7 +385,7 @@ export function MeetingDetailScreen({ navigation, route }: any) {
 
         {/* Tab bar */}
         <View style={styles.tabBar}>
-          {tabs.map((tab) => (
+          {TABS.map((tab) => (
             <Pressable
               key={tab.key}
               onPress={() => setActiveTab(tab.key)}

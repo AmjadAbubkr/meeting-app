@@ -56,11 +56,22 @@ export function MeetingScreen({ navigation, noSafeArea }: any) {
   }, [appState, setLanguage]);
 
   useEffect(() => {
+    if (appState !== 'READY') {
+      return;
+    }
+
+    let active = true;
     (async () => {
       const hasGroq = await hasApiKey('groq');
       const hasGemini = await hasApiKey('gemini');
-      setApiKeysReady(hasGroq && hasGemini);
+      if (active) {
+        setApiKeysReady(hasGroq && hasGemini);
+      }
     })();
+
+    return () => {
+      active = false;
+    };
   }, [appState]);
 
   const dateLabel = useMemo(() => new Date().toLocaleString(), []);

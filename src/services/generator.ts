@@ -4,6 +4,7 @@ import type { Language, ReportData } from '../store/appStore';
 const GEMINI_PRIMARY_MODEL = 'gemini-2.0-flash';
 const GEMINI_FALLBACK_MODEL = 'gemini-flash-latest';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const REQUEST_TIMEOUT_MS = 30_000;
 
 const REPORT_JSON_SCHEMA = {
   type: 'object',
@@ -51,23 +52,34 @@ async function callGemini(
   apiKey: string,
   prompt: string,
 ): Promise<Response> {
-  const url = `${GEMINI_BASE_URL}/${modelName}:generateContent?key=${apiKey}`;
+  const url = `${GEMINI_BASE_URL}/${modelName}:generateContent`;
 
-  return fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: REPORT_JSON_SCHEMA,
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
       },
-    }),
-  });
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: REPORT_JSON_SCHEMA,
+        },
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 /**
@@ -79,6 +91,20 @@ function extractTextFromGeminiResponse(json: any): string {
   } catch {
     return '';
   }
+}
+
+async function getGeminiErrorMessage(response: Response): Promise<string> {
+  const errorText = await response.text();
+  let errorMessage = `Gemini API error (${response.status})`;
+  try {
+    const errorJson = JSON.parse(errorText);
+    if (errorJson?.error?.message) {
+      errorMessage = `Gemini API error: ${errorJson.error.message}`;
+    }
+  } catch {
+    // Use the status-based message when the body is not JSON.
+  }
+  return errorMessage;
 }
 
 /**
@@ -135,21 +161,16 @@ Return valid JSON matching the provided schema.`;
   let response = await callGemini(GEMINI_PRIMARY_MODEL, apiKey, prompt);
 
   if (!response.ok) {
+    const retryableStatus = [404, 500, 502, 503, 504].includes(response.status);
+    if (!retryableStatus) {
+      throw new Error(await getGeminiErrorMessage(response));
+    }
+
     // If primary model fails, try fallback
     const fallbackResponse = await callGemini(GEMINI_FALLBACK_MODEL, apiKey, prompt);
 
     if (!fallbackResponse.ok) {
-      const errorText = await fallbackResponse.text();
-      let errorMessage = `Gemini API error (${fallbackResponse.status})`;
-      try {
-        const errorJson = JSON.parse(errorText);
-        if (errorJson?.error?.message) {
-          errorMessage = `Gemini API error: ${errorJson.error.message}`;
-        }
-      } catch {
-        // Use default error message
-      }
-      throw new Error(errorMessage);
+      throw new Error(await getGeminiErrorMessage(fallbackResponse));
     }
 
     response = fallbackResponse;

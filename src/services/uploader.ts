@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import RNFS, { CachesDirectoryPath } from 'react-native-fs';
 import { SUPPORTED_AUDIO_FORMATS, WARN_UPLOAD_SIZE_BYTES } from '../config';
@@ -117,7 +118,7 @@ export function useUploadController() {
   const setProcessingStep = useAppStore((s) => s.setProcessingStep);
   const setAppState = useAppStore((s) => s.setAppState);
 
-  const upload = async () => {
+  const upload = useCallback(async () => {
     setProcessingStep('Selecting audio file...');
 
     try {
@@ -134,9 +135,7 @@ export function useUploadController() {
 
       setProcessingStep(`Upload complete. ${result.chunkCount} chunk(s) ready.`);
 
-      // Brief buffer to ensure Zustand store subscribers have re-rendered
-      // with the new audioChunks before the pipeline reads them.
-      await new Promise((r) => setTimeout(r, 300));
+      // Zustand updates synchronously, so the pipeline can start immediately.
 
       // Only now transition — this triggers runFullPipeline via useEffect
       setAppState('PROCESSING');
@@ -144,7 +143,7 @@ export function useUploadController() {
       setProcessingStep('');
       throw error;
     }
-  };
+  }, [addAudioChunk, setChunkState, setProcessingStep, setAppState]);
 
   return { upload };
 }

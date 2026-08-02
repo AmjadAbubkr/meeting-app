@@ -14,17 +14,17 @@ import { hasApiKey } from '../services/apiKeys';
 import { useAppStore } from '../store/appStore';
 
 const Stack = createNativeStackNavigator();
+const TOP_NAV_LINKS = ['Meeting', 'History', 'Settings'];
 
 function TopNavBar({ active, onNavigate }: { active: string; onNavigate: (screen: string) => void }) {
   const insets = useSafeAreaInsets();
-  const links = ['Meeting', 'History', 'Settings'];
 
   return (
     <View style={[styles.navBar, { paddingTop: insets.top }]}>
       <View style={styles.navContent}>
         <Text style={styles.navBrand}>Meeting</Text>
         <View style={styles.navLinks}>
-          {links.map((link) => (
+          {TOP_NAV_LINKS.map((link) => (
             <Pressable
               key={link}
               onPress={() => onNavigate(link)}
@@ -47,15 +47,6 @@ function MainScreen({ navigation }: any) {
   const handleNavigate = (screen: string) => {
     setActiveTab(screen);
   };
-
-  useEffect(() => {
-    const subscription = navigation.addListener('beforeRemove', (e: any) => {
-      if (navigation.getState().index === 0) {
-        e.preventDefault();
-      }
-    });
-    return subscription;
-  }, [navigation]);
 
   return (
     <View style={styles.mainContainer}>
@@ -86,15 +77,17 @@ export function AppNavigator() {
   useEffect(() => {
     (async () => {
       try {
-        const exists = await hasPasscode();
+        const [exists, hasGroq, hasGemini] = await Promise.all([
+          hasPasscode(),
+          hasApiKey('groq'),
+          hasApiKey('gemini'),
+        ]);
         setPasscodeExists(exists);
 
         // Always resolve initialRoute — even when a passcode exists.
         // After the user authenticates, gateRoute needs initialRoute to
         // determine the next screen. Without this, initialRoute stays null
         // and the loading guard traps the user forever.
-        const hasGroq = await hasApiKey('groq');
-        const hasGemini = await hasApiKey('gemini');
         setInitialRoute(hasGroq && hasGemini ? 'Main' : 'ApiKeySetup');
       } catch {
         setInitialRoute('ApiKeySetup');

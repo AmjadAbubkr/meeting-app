@@ -5,6 +5,7 @@ import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 
 // Module-level instance (same pattern as recorder.ts)
 const audioRecorderPlayer = new AudioRecorderPlayer();
+const PLAYBACK_SPEEDS = [1, 1.5, 2] as const;
 
 type Props = {
   audioPath: string | null;
@@ -115,8 +116,6 @@ export function AudioPlayer({ audioPath }: Props) {
     }
   };
 
-  const speeds = [1, 1.5, 2];
-
   if (!audioPath) {
     return (
       <View style={styles.centerContent}>
@@ -165,7 +164,7 @@ export function AudioPlayer({ audioPath }: Props) {
 
       {/* Speed control */}
       <View style={styles.speedRow}>
-        {speeds.map((speed) => (
+        {PLAYBACK_SPEEDS.map((speed) => (
           <Pressable
             key={speed}
             onPress={() => handleSpeedChange(speed)}
