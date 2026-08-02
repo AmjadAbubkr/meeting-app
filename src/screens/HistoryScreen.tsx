@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { SectionList, Text, TextInput, View, Pressable, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenShell } from '../components/ScreenShell';
-import { getAllMeetings, MeetingRecord } from '../db/database';
+import { getAllMeetings, getReportForLanguage, MeetingRecord } from '../db/database';
 
 type DateGroup = 'Today' | 'Yesterday' | 'This Week' | 'Earlier';
 
@@ -49,24 +49,15 @@ function groupMeetingsByDate(meetings: MeetingRecord[]): Section[] {
 
 function getSubtitle(meeting: MeetingRecord): string {
   // Try to extract an overview from the reports JSON
-  if (meeting.reports) {
-    try {
-      const parsed = JSON.parse(meeting.reports);
-      // Check EN first, then FR
-      const langData = parsed.EN || parsed.FR;
-      if (langData?.report?.overview) {
-        const overview = langData.report.overview as string;
-        return overview.length > 80 ? overview.substring(0, 80) + '...' : overview;
-      }
-      // Try summary bullets
-      const summary = langData?.summary;
-      if (Array.isArray(summary) && summary.length > 0) {
-        const first = summary[0] as string;
-        return first.length > 80 ? first.substring(0, 80) + '...' : first;
-      }
-    } catch {
-      // Ignore parse errors
-    }
+  const langData = getReportForLanguage(meeting, 'EN');
+  if (langData?.report?.overview) {
+    const overview = langData.report.overview;
+    return overview.length > 80 ? overview.substring(0, 80) + '...' : overview;
+  }
+  // Try summary bullets
+  if (langData?.summary.length) {
+    const first = langData.summary[0];
+    return first.length > 80 ? first.substring(0, 80) + '...' : first;
   }
   if (meeting.rawTranscript) {
     const text = meeting.rawTranscript.trim();
@@ -90,6 +81,26 @@ function formatDate(dateStr: string): string {
   }
 }
 
+function MeetingListItem({
+  meeting,
+  onPress,
+}: {
+  meeting: MeetingRecord;
+  onPress: (id: number) => void;
+}) {
+  return (
+    <Pressable onPress={() => onPress(meeting.id)} style={styles.card}>
+      <Text style={styles.cardTitle}>{meeting.title}</Text>
+      <Text style={styles.cardDate}>
+        {formatDate(meeting.createdAt || meeting.date)}
+      </Text>
+      <Text style={styles.cardSubtitle} numberOfLines={2}>
+        {getSubtitle(meeting)}
+      </Text>
+    </Pressable>
+  );
+}
+
 export function HistoryScreen({ navigation, noSafeArea }: any) {
   const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
   const [searchText, setSearchText] = useState('');
@@ -109,6 +120,18 @@ export function HistoryScreen({ navigation, noSafeArea }: any) {
   const sections = useMemo(
     () => groupMeetingsByDate(filteredMeetings),
     [filteredMeetings],
+  );
+
+  const handleMeetingPress = useCallback(
+    (meetingId: number) => navigation.navigate('MeetingDetail', { meetingId }),
+    [navigation],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: MeetingRecord }) => (
+      <MeetingListItem meeting={item} onPress={handleMeetingPress} />
+    ),
+    [handleMeetingPress],
   );
 
   return (
@@ -136,22 +159,7 @@ export function HistoryScreen({ navigation, noSafeArea }: any) {
           renderSectionHeader={({ section: { title } }) => (
             <Text style={styles.sectionTitle}>{title}</Text>
           )}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() =>
-                navigation.navigate('MeetingDetail', { meetingId: item.id })
-              }
-              style={styles.card}
-            >
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardDate}>
-                {formatDate(item.createdAt || item.date)}
-              </Text>
-              <Text style={styles.cardSubtitle} numberOfLines={2}>
-                {getSubtitle(item)}
-              </Text>
-            </Pressable>
-          )}
+          renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: 24 }}
         />
       </View>

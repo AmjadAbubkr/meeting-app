@@ -24,7 +24,7 @@ import type { Language } from '../store/appStore';
 
 type EditingKey = 'groq' | 'gemini' | null;
 
-export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
+export function SettingsScreen({ navigation, noSafeArea }: any) {
   const [defaultLanguage, setDefaultLanguage] = useState<Language>('EN');
   const [groqExists, setGroqExists] = useState(false);
   const [geminiExists, setGeminiExists] = useState(false);
@@ -50,20 +50,20 @@ export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
   const [confirmPasscode, setConfirmPasscode] = useState('');
 
   const loadSettings = async () => {
-    const lang = await getSetting('defaultLanguage');
+    const [lang, gExists, gemExists, hasPass, info] = await Promise.all([
+      getSetting('defaultLanguage'),
+      hasApiKey('groq'),
+      hasApiKey('gemini'),
+      hasPasscode(),
+      getStorageInfo(),
+    ]);
+
     if (lang === 'EN' || lang === 'FR') {
       setDefaultLanguage(lang);
     }
-
-    const gExists = await hasApiKey('groq');
-    const gemExists = await hasApiKey('gemini');
     setGroqExists(gExists);
     setGeminiExists(gemExists);
-
-    const hasPass = await hasPasscode();
     setHasStoredPasscode(hasPass);
-
-    const info = await getStorageInfo();
     setStorageInfo(info);
   };
 
@@ -138,7 +138,10 @@ export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
           setGroqTestResult(response.ok ? 'valid' : 'invalid');
         } else {
           const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models?key=${keyValue}`,
+            'https://generativelanguage.googleapis.com/v1beta/models',
+            {
+              headers: { 'x-goog-api-key': keyValue },
+            },
           );
           setGeminiTestResult(response.ok ? 'valid' : 'invalid');
         }
@@ -187,11 +190,15 @@ export function SettingsScreen({ navigation: _navigation, noSafeArea }: any) {
             setGeminiExists(false);
             resetMeeting();
             setAuthenticated(false);
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Passcode' }],
+            });
           },
         },
       ],
     );
-  }, [resetMeeting, setAuthenticated]);
+  }, [navigation, resetMeeting, setAuthenticated]);
 
   // Passcode change flow
   const handleChangePasscode = useCallback(() => {

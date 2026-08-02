@@ -33,10 +33,11 @@ export async function initDB(): Promise<boolean> {
     return true;
   }
 
-  db = open({ name: DB_NAME });
+  const database = open({ name: DB_NAME });
 
-  // Create tables
-  db.executeSync(`
+  try {
+    // Create tables
+    database.executeSync(`
     CREATE TABLE IF NOT EXISTS meetings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -49,17 +50,24 @@ export async function initDB(): Promise<boolean> {
     );
   `);
 
-  db.executeSync(`
+    database.executeSync(`
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
   `);
 
-  // Clean orphaned audio files
-  await cleanOrphanedAudioFiles();
+    // Publish the connection only after the schema is ready. This keeps a
+    // failed initialization retryable instead of leaving a broken handle.
+    db = database;
+    await cleanOrphanedAudioFiles();
 
-  return true;
+    return true;
+  } catch (error) {
+    database.close();
+    db = null;
+    throw error;
+  }
 }
 
 /**
@@ -342,6 +350,10 @@ export async function moveAudioToPermanentStorage(
  */
 async function cleanOrphanedAudioFiles(): Promise<void> {
   try {
+    // Clean temporary recording/chunk files even when the permanent audio
+    // directory has not been created yet.
+    await cleanCacheTempFiles();
+
     const audioDirExists = await RNFS.exists(AUDIO_DIR);
     if (!audioDirExists) {
       return;
@@ -368,8 +380,6 @@ async function cleanOrphanedAudioFiles(): Promise<void> {
       }
     }
 
-    // Also clean orphaned temp files from cache directory
-    await cleanCacheTempFiles();
   } catch {
     // Best-effort cleanup — don't fail DB init if cleanup fails
   }
@@ -386,7 +396,7 @@ async function cleanCacheTempFiles(): Promise<void> {
     for (const item of items) {
       if (
         item.name.startsWith('meeting-recording-') ||
-        item.name.startsWith('chunks-') ||
+        item.name.startsWith('transcribe-chunks-') ||
         item.name.startsWith('upload-chunks-')
       ) {
         try {
@@ -469,26 +479,50 @@ export type ParsedReports = {
   FR?: LangReport;
 };
 
+function normalizeSummary(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  const summary: string[] = [];
+  for (const item of value) {
+    const text = String(item);
+    if (text.length > 0) summary.push(text);
+  }
+  return summary;
+}
+
+function normalizeLangReport(value: unknown): LangReport | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+
+  const record = value as Record<string, unknown>;
+  const reportValue = record.report;
+  const report =
+    reportValue && typeof reportValue === 'object' && !Array.isArray(reportValue)
+      ? reportValue
+      : record;
+
+  return {
+    report: report as ReportData,
+    summary: normalizeSummary(record.summary),
+  };
+}
+
 export function parseReports(meeting: MeetingRecord): ParsedReports {
   const result: ParsedReports = {};
   if (!meeting.reports) return result;
   try {
-    const parsed = JSON.parse(meeting.reports);
-    if (parsed.EN) {
-      result.EN = {
-        report: parsed.EN.report ?? {},
-        summary: Array.isArray(parsed.EN.summary)
-          ? parsed.EN.summary.map((s: unknown) => String(s)).filter((s: string) => s.length > 0)
-          : [],
-      };
-    }
-    if (parsed.FR) {
-      result.FR = {
-        report: parsed.FR.report ?? {},
-        summary: Array.isArray(parsed.FR.summary)
-          ? parsed.FR.summary.map((s: unknown) => String(s)).filter((s: string) => s.length > 0)
-          : [],
-      };
+    const parsed: unknown = JSON.parse(meeting.reports);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return result;
+
+    const record = parsed as Record<string, unknown>;
+    const en = normalizeLangReport(record.EN);
+    const fr = normalizeLangReport(record.FR);
+    if (en) result.EN = en;
+    if (fr) result.FR = fr;
+
+    // Older records stored one report directly instead of under a language key.
+    if (!result.EN && !result.FR) {
+      const legacy = normalizeLangReport(record);
+      if (legacy) result.EN = legacy;
     }
   } catch {
     // Ignore parse errors

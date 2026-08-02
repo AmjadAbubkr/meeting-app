@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { PermissionsAndroid, Platform } from 'react-native';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import KeepAwake from 'react-native-keep-awake';
@@ -141,14 +142,14 @@ export function useRecordingController() {
   const setAppState = useAppStore((s) => s.setAppState);
   const resetMeeting = useAppStore((s) => s.resetMeeting);
 
-  const start = async () => {
+  const start = useCallback(async () => {
     const path = await startRecording();
     KeepAwake.activate();
     setAppState('RECORDING');
     return path;
-  };
+  }, [setAppState]);
 
-  const stop = async () => {
+  const stop = useCallback(async () => {
     try {
       const filePath = await stopRecording();
       KeepAwake.deactivate();
@@ -176,9 +177,9 @@ export function useRecordingController() {
       KeepAwake.deactivate();
       throw error;
     }
-  };
+  }, [addAudioChunk, setChunkState, setProcessingStep, setAppState]);
 
-  const cancel = async () => {
+  const cancel = useCallback(async () => {
     try {
       await cancelRecording();
       KeepAwake.deactivate();
@@ -189,7 +190,7 @@ export function useRecordingController() {
       resetMeeting();
       throw error;
     }
-  };
+  }, [resetMeeting]);
 
   return { start, stop, cancel };
 }
