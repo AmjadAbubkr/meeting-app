@@ -1,8 +1,8 @@
 import { getApiKey } from './apiKeys';
 import type { Language, ReportData } from '../store/appStore';
 
-const GEMINI_PRIMARY_MODEL = 'gemini-2.0-flash';
-const GEMINI_FALLBACK_MODEL = 'gemini-flash-latest';
+const GEMINI_PRIMARY_MODEL = 'gemini-flash-latest';
+const GEMINI_FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const REQUEST_TIMEOUT_MS = 30_000;
 
@@ -161,7 +161,7 @@ Return valid JSON matching the provided schema.`;
   let response = await callGemini(GEMINI_PRIMARY_MODEL, apiKey, prompt);
 
   if (!response.ok) {
-    const retryableStatus = [404, 500, 502, 503, 504].includes(response.status);
+    const retryableStatus = [404, 429, 500, 502, 503, 504].includes(response.status);
     if (!retryableStatus) {
       throw new Error(await getGeminiErrorMessage(response));
     }
