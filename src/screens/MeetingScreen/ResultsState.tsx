@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { getRenderableSections } from '../../services/reportSections';
-import { exportPDF, exportDOCX } from '../../services/exporter';
+import { exportPDF, exportDOCX, shareExportedFile } from '../../services/exporter';
 import type { Language, ReportData } from '../../store/appStore';
 import { theme } from './theme';
 
@@ -45,7 +45,7 @@ export function ResultsState({
         format === 'pdf'
           ? await exportPDF(meetingForExport, currentLanguage)
           : await exportDOCX(meetingForExport, currentLanguage);
-      Alert.alert('Exported', `Saved to ${path}`);
+      await shareExportedFile(path, format, meetingTitle);
     } catch (err: any) {
       Alert.alert('Export Error', err.message || 'Failed to export file.');
     } finally {
