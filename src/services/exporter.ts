@@ -36,19 +36,6 @@ function sanitizeFilename(name: string): string {
   return sanitized || 'meeting';
 }
 
-function getOutputDirectory(): string {
-  return RNFS.ExternalDirectoryPath || RNFS.DocumentDirectoryPath;
-}
-
-async function ensureOutputDirectory(): Promise<string> {
-  const directory = getOutputDirectory();
-  const exists = await RNFS.exists(directory);
-  if (!exists) {
-    await RNFS.mkdir(directory);
-  }
-  return directory;
-}
-
 function buildReportHTML(
   title: string,
   date: string,
@@ -150,7 +137,6 @@ export async function exportPDF(
   const result = await generatePDF({
     html: htmlContent,
     fileName,
-    directory: 'Documents',
   });
 
   if (!result.filePath) {
@@ -210,8 +196,7 @@ export async function exportDOCX(
   }
 
   const doc = new Document({ sections: [{ children }] });
-  const outputDirectory = await ensureOutputDirectory();
-  const outputPath = `${outputDirectory}/Meeting-${sanitizeFilename(meeting.title)}-${sanitizeFilename(meeting.date)}.docx`;
+  const outputPath = `${RNFS.CachesDirectoryPath}/Meeting-${sanitizeFilename(meeting.title)}-${sanitizeFilename(meeting.date)}.docx`;
 
   const base64 = await Packer.toBase64String(doc);
   if (!base64) {
@@ -227,6 +212,11 @@ export async function shareExportedFile(
   format: ExportFormat,
   title: string,
 ): Promise<void> {
+  const exists = await RNFS.exists(path);
+  if (!exists) {
+    throw new Error('The exported file could not be found for sharing.');
+  }
+
   await NativeShare.open({
     url: `file://${path}`,
     type:
