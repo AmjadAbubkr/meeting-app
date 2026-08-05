@@ -1,47 +1,54 @@
 import RNFS from 'react-native-fs';
-import { Share, PermissionsAndroid, Platform } from 'react-native';
+import { Share } from 'react-native';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import * as HTMLToPDFModule from 'react-native-html-to-pdf';
+import NativeShare from 'react-native-share';
 import type { MeetingRecord } from '../db/database';
 import { getReportForLanguage } from '../db/database';
 import { getRenderableSections } from './reportSections';
 import type { ReportData } from '../store/appStore';
 
-/**
- * Sanitize a string for use in filenames.
- * Removes path traversal characters and replaces non-alphanumeric chars with dashes.
- * Truncates to 50 characters max.
- */
-async function requestStoragePermission(): Promise<boolean> {
-  if (Platform.OS !== 'android') return true;
-  try {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      {
-        title: 'Storage Permission',
-        message: 'Meeting App needs storage access to save exported files.',
-        buttonNeutral: 'Ask Me Later',
-        buttonNegative: 'Cancel',
-        buttonPositive: 'OK',
-      },
-    );
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
-  } catch {
-    return false;
-  }
-}
+type ExportFormat = 'pdf' | 'docx';
+
+type PDFResult = {
+  filePath: string;
+};
+
+type GeneratePDF = (options: {
+  html: string;
+  fileName: string;
+  directory?: string;
+}) => Promise<PDFResult>;
+
+// react-native-html-to-pdf v1.3 exports generatePDF by name at runtime.
+// Its bundled declaration in this project only declares a default export.
+const { generatePDF } = HTMLToPDFModule as unknown as {
+  generatePDF: GeneratePDF;
+};
 
 function sanitizeFilename(name: string): string {
-  return name
-    .replace(/[^a-zA-Z0-9]/g, '-') // Replace non-alphanumeric with dash
-    .replace(/-+/g, '-') // Collapse multiple dashes
-    .replace(/^-|-$/g, '') // Trim leading/trailing dashes
+  const sanitized = name
+    .replace(/[^a-zA-Z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
     .substring(0, 50);
+
+  return sanitized || 'meeting';
 }
 
-/**
- * Build an HTML document from meeting report data for PDF conversion.
- */
+function getOutputDirectory(): string {
+  return RNFS.ExternalDirectoryPath || RNFS.DocumentDirectoryPath;
+}
+
+async function ensureOutputDirectory(): Promise<string> {
+  const directory = getOutputDirectory();
+  const exists = await RNFS.exists(directory);
+  if (!exists) {
+    await RNFS.mkdir(directory);
+  }
+  return directory;
+}
+
 function buildReportHTML(
   title: string,
   date: string,
@@ -76,9 +83,6 @@ ${sections}
 </html>`;
 }
 
-/**
- * Escape HTML special characters to prevent injection in the generated document.
- */
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -88,9 +92,6 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
-/**
- * Build a plain text version of the meeting report for sharing.
- */
 function buildReportText(
   title: string,
   date: string,
@@ -122,24 +123,13 @@ function buildReportText(
 function bulletParagraph(text: string): Paragraph {
   return new Paragraph({
     children: [
-      new TextRun({ text: '\u2022 ', bold: true }),
+      new TextRun({ text: '• ', bold: true }),
       new TextRun({ text }),
     ],
     spacing: { after: 60 },
   });
 }
 
-/**
- * Export a meeting report as a PDF file.
- *
- * Generates a formatted HTML document and converts it to PDF using react-native-html-to-pdf.
- * The file is saved to the device Downloads directory (Android 10+ scoped storage).
- *
- * @param meeting - The meeting record to export
- * @param language - The language variant to export ('EN' or 'FR')
- * @returns The file path of the generated PDF
- * @throws Error if no report data exists, or if PDF generation fails
- */
 export async function exportPDF(
   meeting: MeetingRecord,
   language: 'EN' | 'FR' = 'EN',
@@ -149,49 +139,27 @@ export async function exportPDF(
     throw new Error('No report data to export');
   }
 
-  const granted = await requestStoragePermission();
-  if (!granted) {
-    throw new Error('Storage permission denied — cannot export PDF.');
+  if (typeof generatePDF !== 'function') {
+    throw new Error('PDF export module is unavailable. Rebuild the Android app.');
   }
 
   const { report, summary } = reportData;
   const htmlContent = buildReportHTML(meeting.title, meeting.date, report, summary);
+  const fileName = `Meeting-${sanitizeFilename(meeting.title)}-${sanitizeFilename(meeting.date)}`;
 
-  const safeTitle = sanitizeFilename(meeting.title);
-  const safeDate = sanitizeFilename(meeting.date);
-  const fileName = `Meeting-${safeTitle}-${safeDate}`;
+  const result = await generatePDF({
+    html: htmlContent,
+    fileName,
+    directory: 'Documents',
+  });
 
-  try {
-    const options = {
-      html: htmlContent,
-      fileName,
-      directory: 'Documents' as const,
-    };
-
-    const result = await RNHTMLtoPDF.convert(options);
-
-    if (!result.filePath) {
-      throw new Error('PDF generator returned no file path.');
-    }
-
-    return result.filePath;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Failed to generate PDF';
-    throw new Error(msg);
+  if (!result.filePath) {
+    throw new Error('PDF generator returned no file path.');
   }
+
+  return result.filePath;
 }
 
-/**
- * Export a meeting report as a DOCX file.
- *
- * Uses the `docx` library to build a Word document with structured content.
- * The file is saved to the device Downloads directory using react-native-fs.
- *
- * @param meeting - The meeting record to export
- * @param language - The language variant to export ('EN' or 'FR')
- * @returns The file path of the generated DOCX
- * @throws Error if no report data exists, or if file writing fails
- */
 export async function exportDOCX(
   meeting: MeetingRecord,
   language: 'EN' | 'FR' = 'EN',
@@ -201,24 +169,13 @@ export async function exportDOCX(
     throw new Error('No report data to export');
   }
 
-  const granted = await requestStoragePermission();
-  if (!granted) {
-    throw new Error('Storage permission denied — cannot export DOCX.');
-  }
-
   const { report, summary } = reportData;
-
-  const children: Paragraph[] = [];
-
-  children.push(
+  const children: Paragraph[] = [
     new Paragraph({
       text: meeting.title,
       heading: HeadingLevel.HEADING_1,
       spacing: { after: 100 },
     }),
-  );
-
-  children.push(
     new Paragraph({
       children: [
         new TextRun({
@@ -229,7 +186,7 @@ export async function exportDOCX(
       ],
       spacing: { after: 300 },
     }),
-  );
+  ];
 
   for (const { section, value } of getRenderableSections(report, summary)) {
     children.push(
@@ -239,6 +196,7 @@ export async function exportDOCX(
         spacing: { before: 200, after: 100 },
       }),
     );
+
     if (section.kind === 'bullets') {
       (value as string[]).forEach((v) => children.push(bulletParagraph(v)));
     } else {
@@ -251,49 +209,35 @@ export async function exportDOCX(
     }
   }
 
-  const doc = new Document({
-    sections: [{ children }],
-  });
+  const doc = new Document({ sections: [{ children }] });
+  const outputDirectory = await ensureOutputDirectory();
+  const outputPath = `${outputDirectory}/Meeting-${sanitizeFilename(meeting.title)}-${sanitizeFilename(meeting.date)}.docx`;
 
-  const safeTitle = sanitizeFilename(meeting.title);
-  const safeDate = sanitizeFilename(meeting.date);
-
-  const outputPath = `${RNFS.DocumentDirectoryPath}/Meeting-${safeTitle}-${safeDate}.docx`;
-
-  try {
-    const buffer = await Packer.toBuffer(doc);
-    let base64: string;
-
-    if (typeof buffer === 'string') {
-      base64 = buffer;
-    } else if (buffer instanceof Uint8Array || Array.isArray(buffer)) {
-      let binary = '';
-      const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-      for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      base64 = btoa(binary);
-    } else if (typeof (buffer as any).toString === 'function') {
-      base64 = (buffer as any).toString('base64');
-    } else {
-      throw new Error('Unexpected buffer type from Packer.toBuffer');
-    }
-
-    await RNFS.writeFile(outputPath, base64, 'base64');
-    return outputPath;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Failed to save DOCX file';
-    throw new Error(msg);
+  const base64 = await Packer.toBase64String(doc);
+  if (!base64) {
+    throw new Error('DOCX generator returned empty content.');
   }
+
+  await RNFS.writeFile(outputPath, base64, 'base64');
+  return outputPath;
 }
 
-/**
- * Share a meeting report as plain text using the system share sheet.
- *
- * @param meeting - The meeting record to share
- * @param language - The language variant to share ('EN' or 'FR')
- * @throws Error if no report data exists
- */
+export async function shareExportedFile(
+  path: string,
+  format: ExportFormat,
+  title: string,
+): Promise<void> {
+  await NativeShare.open({
+    url: `file://${path}`,
+    type:
+      format === 'pdf'
+        ? 'application/pdf'
+        : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    title,
+    failOnCancel: false,
+  });
+}
+
 export async function shareText(
   meeting: MeetingRecord,
   language: 'EN' | 'FR' = 'EN',
