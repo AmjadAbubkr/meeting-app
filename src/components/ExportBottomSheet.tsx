@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';
 import { PrimaryButton } from './PrimaryButton';
-import { exportPDF, exportDOCX, shareText } from '../services/exporter';
+import { exportPDF, exportDOCX, shareExportedFile, shareText } from '../services/exporter';
 import type { MeetingRecord } from '../db/database';
 
 type Props = {
@@ -22,7 +22,7 @@ export function ExportBottomSheet({ visible, onClose, meeting, language = 'EN' }
       setExporting(true);
       setExportFormat('pdf');
       const path = await exportPDF(meeting, language);
-      Alert.alert('Exported', `Saved to ${path}`);
+      await shareExportedFile(path, 'pdf', meeting.title);
       onClose();
     } catch (err: any) {
       Alert.alert('Export Error', err.message || 'Failed to generate PDF.');
@@ -38,7 +38,7 @@ export function ExportBottomSheet({ visible, onClose, meeting, language = 'EN' }
       setExporting(true);
       setExportFormat('docx');
       const path = await exportDOCX(meeting, language);
-      Alert.alert('Exported', `Saved to ${path}`);
+      await shareExportedFile(path, 'docx', meeting.title);
       onClose();
     } catch (err: any) {
       Alert.alert('Export Error', err.message || 'Failed to generate DOCX.');
